@@ -7,8 +7,6 @@ import operator
 import numpy as np
 import seaborn as sns
 import scipy.stats as stats
-#impport cPickle
-
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -28,7 +26,9 @@ class MyForm(QtGui.QMainWindow):
         self.threshold = 0
         self.h_file = h5py.File
 
-        # TODO FIX: generate_view is usually called more than once due to it occurring whenever a combobox changes.
+        self.message_num = 0
+
+        self.ui.textEdit.setReadOnly(True)
 
         QtCore.QObject.connect(self.ui.pushButton_tuning_curve_1, QtCore.SIGNAL("clicked()"), self.generate_rainbow_tuning_curve)
         QtCore.QObject.connect(self.ui.pushButton_tuning_curve_2, QtCore.SIGNAL("clicked()"), self.generate_tuning_curve)
@@ -64,7 +64,7 @@ class MyForm(QtGui.QMainWindow):
                 try:
                     self.h_file = h5py.File(unicode(self.filename), 'r')
                 except IOError:
-                    # self.ui.textEdit.append('Error: I/O Error\n')
+                    self.add_message('Error: I/O Error')
                     self.ui.label_test_num.setEnabled(False)
                     self.ui.comboBox_test_num.setEnabled(False)
                     return
@@ -83,12 +83,12 @@ class MyForm(QtGui.QMainWindow):
                 self.ui.label_test_num.setEnabled(True)
                 self.ui.comboBox_test_num.setEnabled(True)
             else:
-                # self.ui.textEdit.append('Error: Must select a .hdf5 file.\n')
+                self.add_message('Error: Must select a .hdf5 file.')
                 self.ui.label_test_num.setEnabled(False)
                 self.ui.comboBox_test_num.setEnabled(False)
                 return
         else:
-            # self.ui.textEdit.append('Error: Must select a file to open.\n')
+            self.add_message('Error: Must select a file to open.')
             self.ui.label_test_num.setEnabled(False)
             self.ui.comboBox_test_num.setEnabled(False)
             return
@@ -163,6 +163,10 @@ class MyForm(QtGui.QMainWindow):
         # else:
         #     fs = h_file[target_seg].attrs['samplerate_ad']
         #     print 'Type 2'
+
+        # Makes the assumption that all of the traces are of the same type
+        stim_info = eval(h_file[target_seg][target_test].attrs['stim'])
+        self.ui.label_stim_type.setText(stim_info[1]['components'][0]['stim_type'])
 
         fs = h_file[target_seg].attrs['samplerate_ad']
 
@@ -252,13 +256,13 @@ class MyForm(QtGui.QMainWindow):
                     temp_file = h5py.File(unicode(self.filename), 'r')
                     temp_file.close()
                 except IOError:
-                    # self.ui.textEdit.append('Error: I/O Error\n')
+                    self.add_message('Error: I/O Error')
                     return False
             else:
-                # self.ui.textEdit.append('Error: Must select a .hdf5 file.\n')
+                self.add_message('Error: Must select a .hdf5 file.')
                 return False
         else:
-            # self.ui.textEdit.append('Error: Must select a file to open.\n')
+            self.add_message('Error: Must select a file to open.')
             return False
 
         return True
@@ -426,9 +430,8 @@ class MyForm(QtGui.QMainWindow):
 
         stim_info = eval(h_file[target_seg][target_test].attrs['stim'])
         duration = trace_data.shape[-1] / fs * 1000
-
         if stim_info[1]['components'][0]['stim_type'] != 'Pure Tone':
-            print 'Cannot generate raster with', stim_info[1]['components'][0]['stim_type']
+            self.add_message('Cannot generate raster with stim type "' + str(stim_info[1]['components'][0]['stim_type']) + '".')
             return
 
         autoRasters = {}
@@ -450,7 +453,7 @@ class MyForm(QtGui.QMainWindow):
                     trace = trace_data[tStim][tRep][tchan]
                     pass
                 else:
-                    print 'Cannot handle trace_data of shape:', trace_data.shape
+                    self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
                     return
 
                 spike_times = 1000 * np.array(get_spike_times(trace, thresh, fs))
@@ -592,6 +595,10 @@ class MyForm(QtGui.QMainWindow):
                 freqList.append(key)
             orderedKeys.append(freqList)
         return orderedKeys, freqs, attns
+
+    def add_message(self, message):
+        self.message_num += 1
+        self.ui.textEdit.append('[' + str(self.message_num) + ']: ' + message + '\n')
 
 
 def get_tuning_data(filename):

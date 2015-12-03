@@ -603,17 +603,31 @@
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout_3">
-        <item row="1" column="0">
+        <item row="3" column="0">
          <widget class="QPushButton" name="pushButton_tuning_curve_2">
           <property name="text">
            <string>Tuning Curve 2</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="0">
+        <item row="2" column="0">
          <widget class="QPushButton" name="pushButton_tuning_curve_1">
           <property name="text">
            <string>Tuning Curve 1</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QPushButton" name="pushButton_raster">
+          <property name="text">
+           <string>Raster</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="pushButton_historgram">
+          <property name="text">
+           <string>Histogram</string>
           </property>
          </widget>
         </item>

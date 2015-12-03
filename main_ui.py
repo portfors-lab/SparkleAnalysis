@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'c:/Users/Joel/Documents/AnalysisGui/main.ui'
 #
-# Created: Mon Nov 30 18:10:58 2015
+# Created: Wed Dec 02 15:24:04 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -291,10 +291,10 @@ class Ui_MainWindow(object):
         self.label_3.setObjectName(_fromUtf8("label_3"))
         self.gridLayout_5.addWidget(self.label_3, 0, 0, 1, 1)
         self.label_stim_type = QtGui.QLabel(self.centralwidget)
-        self.label_stim_type.setText(_fromUtf8(""))
         self.label_stim_type.setObjectName(_fromUtf8("label_stim_type"))
         self.gridLayout_5.addWidget(self.label_stim_type, 0, 1, 1, 1)
         self.textEdit = QtGui.QTextEdit(self.centralwidget)
+        self.textEdit.setEnabled(True)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -315,10 +315,16 @@ class Ui_MainWindow(object):
         self.gridLayout_3.setObjectName(_fromUtf8("gridLayout_3"))
         self.pushButton_tuning_curve_2 = QtGui.QPushButton(self.centralwidget)
         self.pushButton_tuning_curve_2.setObjectName(_fromUtf8("pushButton_tuning_curve_2"))
-        self.gridLayout_3.addWidget(self.pushButton_tuning_curve_2, 1, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.pushButton_tuning_curve_2, 3, 0, 1, 1)
         self.pushButton_tuning_curve_1 = QtGui.QPushButton(self.centralwidget)
         self.pushButton_tuning_curve_1.setObjectName(_fromUtf8("pushButton_tuning_curve_1"))
-        self.gridLayout_3.addWidget(self.pushButton_tuning_curve_1, 0, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.pushButton_tuning_curve_1, 2, 0, 1, 1)
+        self.pushButton_raster = QtGui.QPushButton(self.centralwidget)
+        self.pushButton_raster.setObjectName(_fromUtf8("pushButton_raster"))
+        self.gridLayout_3.addWidget(self.pushButton_raster, 0, 0, 1, 1)
+        self.pushButton_historgram = QtGui.QPushButton(self.centralwidget)
+        self.pushButton_historgram.setObjectName(_fromUtf8("pushButton_historgram"))
+        self.gridLayout_3.addWidget(self.pushButton_historgram, 1, 0, 1, 1)
         self.horizontalLayout_2.addLayout(self.gridLayout_3)
         self.gridLayout.addLayout(self.horizontalLayout_2, 2, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -366,7 +372,10 @@ class Ui_MainWindow(object):
         self.radioButton_normal.setText(_translate("MainWindow", "Normal", None))
         self.radioButton_inverse.setText(_translate("MainWindow", "Inverse", None))
         self.label_3.setText(_translate("MainWindow", "Stim Type:", None))
+        self.label_stim_type.setText(_translate("MainWindow", "None", None))
         self.pushButton_tuning_curve_2.setText(_translate("MainWindow", "Tuning Curve 2", None))
         self.pushButton_tuning_curve_1.setText(_translate("MainWindow", "Tuning Curve 1", None))
+        self.pushButton_raster.setText(_translate("MainWindow", "Raster", None))
+        self.pushButton_historgram.setText(_translate("MainWindow", "Histogram", None))
 
 from pyqtgraph_widgets import TraceWidget

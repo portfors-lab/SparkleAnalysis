@@ -603,6 +603,13 @@
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout_3">
+        <item row="1" column="0">
+         <widget class="QPushButton" name="pushButton_historgram">
+          <property name="text">
+           <string>Histogram</string>
+          </property>
+         </widget>
+        </item>
         <item row="3" column="0">
          <widget class="QPushButton" name="pushButton_tuning_curve_2">
           <property name="text">
@@ -624,10 +631,10 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="pushButton_historgram">
+        <item row="4" column="0">
+         <widget class="QPushButton" name="pushButton_io_test">
           <property name="text">
-           <string>Histogram</string>
+           <string>I/O Test</string>
           </property>
          </widget>
         </item>

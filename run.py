@@ -34,6 +34,7 @@ class MyForm(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.pushButton_historgram, QtCore.SIGNAL("clicked()"), self.graph_historgram)
         QtCore.QObject.connect(self.ui.pushButton_tuning_curve_1, QtCore.SIGNAL("clicked()"), self.graph_rainbow_tuning_curve)
         QtCore.QObject.connect(self.ui.pushButton_tuning_curve_2, QtCore.SIGNAL("clicked()"), self.graph_tuning_curve)
+        QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_io_test)
 
         QtCore.QObject.connect(self.ui.pushButton_browse, QtCore.SIGNAL("clicked()"), self.browse)
         QtCore.QObject.connect(self.ui.pushButton_auto_threshold, QtCore.SIGNAL("clicked()"), self.auto_threshold)
@@ -471,6 +472,89 @@ class MyForm(QtGui.QMainWindow):
 
         return autoRasters
 
+    def graph_io_test(self):
+        filename = self.filename = self.ui.lineEdit_file_name.text()
+
+        # Validate filename
+        if not self.valid_filename(filename):
+            return
+
+        target_test = self.ui.comboBox_test_num.currentText()
+        thresh = self.ui.doubleSpinBox_threshold.value()
+
+        h_file = h5py.File(unicode(filename), 'r')
+
+        # Find target segment
+        for segment in h_file.keys():
+            for test in h_file[segment].keys():
+                if target_test == test:
+                    target_seg = segment
+                    target_test = test
+
+        fs = h_file[target_seg].attrs['samplerate_ad']
+        reps = h_file[target_seg][target_test].attrs['reps']
+        start_time = h_file[target_seg][target_test].attrs['start']
+        trace_data = h_file[target_seg][target_test].value
+
+        if len(trace_data.shape) == 4:
+            pass
+
+        stim_info = eval(h_file[target_seg][target_test].attrs['stim'])
+        duration = trace_data.shape[-1] / fs * 1000
+
+        autoRasters = {}
+        for tStim in range(1, len(stim_info)):
+            spl = int(stim_info[tStim]['components'][0]['intensity'])
+            traceKey = 'None_' + str(spl).zfill(2)
+            spikeTrains = pd.DataFrame([])
+            nspk = 0
+            for tRep in range(reps):
+
+                if len(trace_data.shape) == 3:
+                    trace = trace_data[tStim][tRep]
+                    pass
+                elif len(trace_data.shape) == 4:
+                    tchan = int(self.ui.comboBox_channel.currentText().replace('channel_', '')) - 1
+                    trace = trace_data[tStim][tRep][tchan]
+                    pass
+                else:
+                    self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
+                    return
+
+                spike_times = 1000 * np.array(get_spike_times(trace, thresh, fs))
+                spike_times_s = pd.Series(spike_times)
+
+                if spike_times_s.size >= nspk:
+                    spikeTrains = spikeTrains.reindex(spike_times_s.index)
+                    nspk = spike_times_s.size
+                spikeTrains[str(tRep)] = spike_times_s
+            autoRasters[traceKey] = spikeTrains
+        rasters = autoRasters
+
+        h_file.close()
+
+        tuning = []
+
+        sortedKeys = sorted(rasters.keys())
+        for traceKey in sortedKeys:
+            spl = int(traceKey.split('_')[-1])
+            raster = rasters[traceKey]
+            res = ResponseStats(raster)
+            tuning.append({'intensity': spl, 'response': res[0], 'responseSTD': res[1]})
+
+        tuningCurves = pd.DataFrame(tuning)
+        tuningCurves.plot(x='intensity', y='response', yerr='responseSTD', capthick=1, label=str(target_test))
+        plt.legend(loc='upper left', fontsize=12, frameon=True)
+        sns.despine()
+        plt.grid(False)
+        plt.xlabel('Intensity (dB)', size=14)
+        plt.ylabel('Response Rate (Hz)', size=14)
+        plt.tick_params(axis='both', which='major', labelsize=14)
+        plt.title(str.split(str(filename), '/')[-1].replace('.hdf5', '') + ' '
+                  + str(self.ui.comboBox_test_num.currentText()).replace('test_', 'Test '))
+
+        plt.show()
+
     def graph_rainbow_tuning_curve(self):
         filename = self.filename = self.ui.lineEdit_file_name.text()
 
@@ -586,6 +670,8 @@ class MyForm(QtGui.QMainWindow):
                     target_seg = segment
                     target_test = test
 
+        target_trace = int(self.ui.comboBox_trace.currentText().replace('trace_', '')) - 1
+
         fs = h_file[target_seg].attrs['samplerate_ad']
         reps = h_file[target_seg][target_test].attrs['reps']
         start_time = h_file[target_seg][target_test].attrs['start']
@@ -598,30 +684,31 @@ class MyForm(QtGui.QMainWindow):
         duration = trace_data.shape[-1] / fs * 1000
 
         autoRasters = {}
-        for tStim in range(1, len(stim_info)):
-            spikeTrains = pd.DataFrame([])
-            nspk = 0
-            for tRep in range(reps):
+        tStim = target_trace
 
-                if len(trace_data.shape) == 3:
-                    trace = trace_data[tStim][tRep]
-                    pass
-                elif len(trace_data.shape) == 4:
-                    tchan = int(self.ui.comboBox_channel.currentText().replace('channel_', '')) - 1
-                    trace = trace_data[tStim][tRep][tchan]
-                    pass
-                else:
-                    self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
-                    return
+        spikeTrains = pd.DataFrame([])
+        nspk = 0
+        for tRep in range(reps):
 
-                spike_times = 1000 * np.array(get_spike_times(trace, thresh, fs))
-                spike_times_s = pd.Series(spike_times)
+            if len(trace_data.shape) == 3:
+                trace = trace_data[tStim][tRep]
+                pass
+            elif len(trace_data.shape) == 4:
+                tchan = int(self.ui.comboBox_channel.currentText().replace('channel_', '')) - 1
+                trace = trace_data[tStim][tRep][tchan]
+                pass
+            else:
+                self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
+                return
 
-                if spike_times_s.size > nspk:
-                    spikeTrains = spikeTrains.reindex(spike_times_s.index)
-                    nspk = spike_times_s.size
-                spikeTrains[str(tRep)] = spike_times_s
-                rasters = spikeTrains
+            spike_times = 1000 * np.array(get_spike_times(trace, thresh, fs))
+            spike_times_s = pd.Series(spike_times)
+
+            if spike_times_s.size > nspk:
+                spikeTrains = spikeTrains.reindex(spike_times_s.index)
+                nspk = spike_times_s.size
+            spikeTrains[str(tRep)] = spike_times_s
+        rasters = spikeTrains
 
         h_file.close()
 
@@ -672,6 +759,8 @@ class MyForm(QtGui.QMainWindow):
                     target_seg = segment
                     target_test = test
 
+        target_trace = int(self.ui.comboBox_trace.currentText().replace('trace_', '')) - 1
+
         fs = h_file[target_seg].attrs['samplerate_ad']
         reps = h_file[target_seg][target_test].attrs['reps']
         start_time = h_file[target_seg][target_test].attrs['start']
@@ -684,30 +773,31 @@ class MyForm(QtGui.QMainWindow):
         duration = trace_data.shape[-1] / fs * 1000
 
         autoRasters = {}
-        for tStim in range(1, len(stim_info)):
-            spikeTrains = pd.DataFrame([])
-            nspk = 0
-            for tRep in range(reps):
+        tStim = target_trace
 
-                if len(trace_data.shape) == 3:
-                    trace = trace_data[tStim][tRep]
-                    pass
-                elif len(trace_data.shape) == 4:
-                    tchan = int(self.ui.comboBox_channel.currentText().replace('channel_', '')) - 1
-                    trace = trace_data[tStim][tRep][tchan]
-                    pass
-                else:
-                    self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
-                    return
+        spikeTrains = pd.DataFrame([])
+        nspk = 0
+        for tRep in range(reps):
 
-                spike_times = 1000 * np.array(get_spike_times(trace, thresh, fs))
-                spike_times_s = pd.Series(spike_times)
+            if len(trace_data.shape) == 3:
+                trace = trace_data[tStim][tRep]
+                pass
+            elif len(trace_data.shape) == 4:
+                tchan = int(self.ui.comboBox_channel.currentText().replace('channel_', '')) - 1
+                trace = trace_data[tStim][tRep][tchan]
+                pass
+            else:
+                self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
+                return
 
-                if spike_times_s.size > nspk:
-                    spikeTrains = spikeTrains.reindex(spike_times_s.index)
-                    nspk = spike_times_s.size
-                spikeTrains[str(tRep)] = spike_times_s
-                rasters = spikeTrains
+            spike_times = 1000 * np.array(get_spike_times(trace, thresh, fs))
+            spike_times_s = pd.Series(spike_times)
+
+            if spike_times_s.size > nspk:
+                spikeTrains = spikeTrains.reindex(spike_times_s.index)
+                nspk = spike_times_s.size
+            spikeTrains[str(tRep)] = spike_times_s
+        rasters = spikeTrains
 
         h_file.close()
 
@@ -808,8 +898,13 @@ def ResponseStats(spikeTrains, stimStart=10, stimDuration=50):
 
 def get_spike_times(signal, threshold, fs):
     times = []
-    over, = np.where(signal > float(threshold))
-    segments, = np.where(np.diff(over) > 1)
+
+    if threshold >= 0:
+        over, = np.where(signal > float(threshold))
+        segments, = np.where(np.diff(over) > 1)
+    else:
+        over, = np.where(signal < float(threshold))
+        segments, = np.where(np.diff(over) > 1)
 
     if len(over) > 1:
         if len(segments) == 0:

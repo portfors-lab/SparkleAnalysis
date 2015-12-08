@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'c:/Users/Joel/Documents/AnalysisGui/multi_io.ui'
 #
-# Created: Mon Dec 07 14:18:50 2015
+# Created: Tue Dec 08 10:45:55 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -40,22 +40,9 @@ class Ui_Form_multi_io(object):
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
         self.pushButton_multi_io = QtGui.QPushButton(self.centralwidget)
         self.pushButton_multi_io.setObjectName(_fromUtf8("pushButton_multi_io"))
-        self.gridLayout_2.addWidget(self.pushButton_multi_io, 0, 3, 1, 1)
+        self.gridLayout_2.addWidget(self.pushButton_multi_io, 0, 1, 1, 1)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.gridLayout_2.addItem(spacerItem, 0, 2, 1, 1)
-        self.label_thresh = QtGui.QLabel(self.centralwidget)
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.label_thresh.setFont(font)
-        self.label_thresh.setObjectName(_fromUtf8("label_thresh"))
-        self.gridLayout_2.addWidget(self.label_thresh, 0, 0, 1, 1)
-        self.doubleSpinBox_thresh = QtGui.QDoubleSpinBox(self.centralwidget)
-        self.doubleSpinBox_thresh.setDecimals(4)
-        self.doubleSpinBox_thresh.setMinimum(-100.0)
-        self.doubleSpinBox_thresh.setMaximum(100.0)
-        self.doubleSpinBox_thresh.setSingleStep(0.001)
-        self.doubleSpinBox_thresh.setObjectName(_fromUtf8("doubleSpinBox_thresh"))
-        self.gridLayout_2.addWidget(self.doubleSpinBox_thresh, 0, 1, 1, 1)
+        self.gridLayout_2.addItem(spacerItem, 0, 0, 1, 1)
         self.gridLayout.addLayout(self.gridLayout_2, 6, 0, 1, 1)
         self.scrollArea = QtGui.QScrollArea(self.centralwidget)
         self.scrollArea.setFrameShape(QtGui.QFrame.Panel)
@@ -97,7 +84,5 @@ class Ui_Form_multi_io(object):
     def retranslateUi(self, Form_multi_io):
         Form_multi_io.setWindowTitle(_translate("Form_multi_io", "Multi I/O Plot", None))
         self.pushButton_multi_io.setText(_translate("Form_multi_io", "Plot", None))
-        self.label_thresh.setText(_translate("Form_multi_io", "Threshold:", None))
-        self.doubleSpinBox_thresh.setSuffix(_translate("Form_multi_io", " V", None))
         self.label_title.setText(_translate("Form_multi_io", "Test Name", None))
 

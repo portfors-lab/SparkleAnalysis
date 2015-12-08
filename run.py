@@ -1,8 +1,5 @@
-import os
 import sys
-import csv
 import h5py
-import json
 import operator
 import numpy as np
 import seaborn as sns
@@ -27,15 +24,13 @@ class MultiIOPopup(QtGui.QMainWindow):
         self.filename = ''
 
         self.checkboxes = []
+        self.comboboxes = []
+        self.spnboxes = []
         self.threshold = 0
 
         QtCore.QObject.connect(self.ui.pushButton_multi_io, QtCore.SIGNAL("clicked()"), self.graph_multi_io_test)
 
-    def set_threshold(self, thresh):
-        self.ui.doubleSpinBox_thresh.setValue(thresh)
-        self.threshold = thresh
-
-    def populate_checkboxes(self, filename):
+    def populate_checkboxes(self, filename, thresh):
         self.filename = filename
 
         self.ui.label_title.setText(str.split(str(filename), '/')[-1])
@@ -51,10 +46,68 @@ class MultiIOPopup(QtGui.QMainWindow):
 
         # Create the layout to populate
         layout = QtGui.QGridLayout()
+
+        title_test = QtGui.QLabel('Test')
+        title_chan = QtGui.QLabel('Channel')
+        title_thresh = QtGui.QLabel('Threshold')
+
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        font.setBold(True)
+
+        title_test.setFont(font)
+        title_chan.setFont(font)
+        title_thresh.setFont(font)
+
+        layout.addWidget(title_test, 0, 0)
+        layout.addWidget(title_chan, 0, 1)
+        layout.addWidget(title_thresh, 0, 2)
+
+        row_count = 1
         for test in sorted_tests:
             checkbox = QtGui.QCheckBox(test[0])
-            layout.addWidget(checkbox)
+            combobox = QtGui.QComboBox()
+            spnbox = QtGui.QDoubleSpinBox()
+
+            layout.addWidget(checkbox, row_count, 0)
             self.checkboxes.append(checkbox)
+
+            # Find target segment
+            for segment in h_file.keys():
+                for s_test in h_file[segment].keys():
+                    if test[0] == s_test:
+                        target_seg = segment
+                        target_test = s_test
+
+            if len(h_file[target_seg][target_test].value.shape) > 3:
+                channels = h_file[target_seg][target_test].value.shape[2]
+            else:
+                channels = 1
+
+            if channels == 1:
+                combobox.addItem('channel_1')
+            else:
+                for i in range(channels):
+                    combobox.addItem('channel_' + str(i+1))
+
+            if combobox.count() < 2:
+                combobox.setEnabled(False)
+
+            layout.addWidget(combobox, row_count, 1)
+            self.comboboxes.append(combobox)
+
+            spnbox.setSuffix(' V')
+            spnbox.setDecimals(4)
+            spnbox.setSingleStep(0.001)
+            spnbox.setMinimum(-100)
+            spnbox.setMaximum(100)
+            spnbox.setValue(thresh)
+
+            layout.addWidget(spnbox, row_count, 2)
+            self.spnboxes.append(spnbox)
+
+            row_count += 1
+
         self.ui.scrollAreaWidgetContents.setLayout(layout)
 
         h_file.close()
@@ -64,21 +117,18 @@ class MultiIOPopup(QtGui.QMainWindow):
         print 'multi io test'
 
         h_file = h5py.File(unicode(self.filename), 'r')
-        thresh = self.ui.doubleSpinBox_thresh.value()
 
-        target_tests = []
-        # Get tests to run
-        for box in self.checkboxes:
-            if box.checkState():
-                target_tests.append(box.text())
+        target_rows = []
+        for i in range(len(self.checkboxes)):
+            if self.checkboxes[i].checkState():
+                target_rows.append(i)
 
         axes = []
-        for target_test in target_tests:
+        for row in target_rows:
 
-            # Find target segment
             for segment in h_file.keys():
                 for test in h_file[segment].keys():
-                    if target_test == test:
+                    if self.checkboxes[row].text() == test:
                         target_seg = segment
                         target_test = test
 
@@ -105,16 +155,17 @@ class MultiIOPopup(QtGui.QMainWindow):
                         # TODO Add Support For Multiple Channels
 
                         # tchan = int(self.ui.comboBox_channel.currentText().replace('channel_', '')) - 1
-                        # trace = trace_data[tStim][tRep][tchan]
+                        tchan = int(self.comboboxes[row].currentText().replace('channel_', '')) -1
+                        trace = trace_data[tStim][tRep][tchan]
 
                         # Currently uses one channel
-                        trace = trace_data[tStim][tRep][0]
+                        #trace = trace_data[tStim][tRep][0]
                         pass
                     else:
                         self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
                         return
 
-                    spike_times = 1000 * np.array(get_spike_times(trace, thresh, fs))
+                    spike_times = 1000 * np.array(get_spike_times(trace, self.spnboxes[row].value(), fs))
                     spike_times_s = pd.Series(spike_times)
 
                     if spike_times_s.size >= nspk:
@@ -136,9 +187,9 @@ class MultiIOPopup(QtGui.QMainWindow):
             tuningCurves = pd.DataFrame(tuning)
 
             if axes:
-                tuningCurves.plot(x='intensity', y='response', ax=axes, yerr='responseSTD', capthick=1, label=str(target_test))
+                tuningCurves.plot(x='intensity', y='response', ax=axes, yerr='responseSTD', capthick=1, label=str(target_test) + ' : ' + str(self.spnboxes[row].value()) + ' V')
             else:
-                axes = tuningCurves.plot(x='intensity', y='response', yerr='responseSTD', capthick=1, label=str(target_test))
+                axes = tuningCurves.plot(x='intensity', y='response', yerr='responseSTD', capthick=1, label=str(target_test) + ' : ' + str(self.spnboxes[row].value()) + ' V')
 
         plt.legend(loc='upper left', fontsize=12, frameon=True)
         sns.despine()
@@ -147,8 +198,6 @@ class MultiIOPopup(QtGui.QMainWindow):
         plt.ylabel('Response Rate (Hz)', size=14)
         plt.tick_params(axis='both', which='major', labelsize=14)
         plt.title(str.split(str(self.filename), '/')[-1].replace('.hdf5', '') + ' Multi I/O')
-
-        plt.figtext(.02, .02, 'Threshold: ' + str(self.ui.doubleSpinBox_thresh.value()) + ' V')
 
         plt.show()
         h_file.close()
@@ -289,15 +338,7 @@ class MyForm(QtGui.QMainWindow):
             return
 
         # clear view
-        self.ui.view.clearTraces()
-        self.ui.view.clearMouse()
-        self.ui.view.clearFocus()
-        self.ui.view.clearMask()
-        self.ui.view.clearData(axeskey='response')
-        self.ui.view.tracePlot.clear()
-        self.ui.view.rasterPlot.clear()
-        self.ui.view.stimPlot.clear()
-        self.ui.view.trace_stash = []
+        self.clear_view()
 
         if self.ui.radioButton_normal.isChecked():
             self.ui.view.invertPolarity(False)
@@ -514,6 +555,11 @@ class MyForm(QtGui.QMainWindow):
             self.ui.label_channel.setEnabled(True)
             self.ui.comboBox_channel.setEnabled(True)
 
+        if self.ui.comboBox_test_num.count() == 0:
+            h_file.close()
+            self.clear_view()
+            return
+
         for key in h_file.keys():
             if 'segment' in key:
                 for test in h_file[key].keys():
@@ -521,7 +567,7 @@ class MyForm(QtGui.QMainWindow):
                         target_seg = key
                         target_test = test
 
-        if len(h_file[key][test].value.shape) > 3:
+        if len(h_file[target_seg][target_test].value.shape) > 3:
             channels = h_file[target_seg][target_test].value.shape[2]
         else:
             channels = 1
@@ -637,8 +683,7 @@ class MyForm(QtGui.QMainWindow):
         if not self.valid_filename(filename):
             return
 
-        self.dialog.populate_checkboxes(filename)
-        self.dialog.set_threshold(self.ui.doubleSpinBox_threshold.value())
+        self.dialog.populate_checkboxes(filename, self.ui.doubleSpinBox_threshold.value())
 
         self.dialog.show()
 
@@ -1033,6 +1078,18 @@ class MyForm(QtGui.QMainWindow):
     def add_message(self, message):
         self.message_num += 1
         self.ui.textEdit.append('[' + str(self.message_num) + ']: ' + message + '\n')
+
+    def clear_view(self):
+        self.ui.view.clearTraces()
+        self.ui.view.clearMouse()
+        self.ui.view.clearFocus()
+        self.ui.view.clearMask()
+        self.ui.view.clearData(axeskey='response')
+        self.ui.view.tracePlot.clear()
+        self.ui.view.rasterPlot.clear()
+        self.ui.view.stimPlot.clear()
+        self.ui.view.trace_stash = []
+        self.ui.view.setThreshold(0)
 
 
 def get_tuning_data(filename):

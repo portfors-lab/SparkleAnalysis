@@ -16,15 +16,152 @@ matplotlib.style.use('ggplot')
 
 from PyQt4 import QtCore, QtGui
 from main_ui import Ui_MainWindow
+from multi_io_ui import Ui_Form_multi_io
+
+class MultiIOPopup(QtGui.QMainWindow):
+    def __init__(self, parent=None):
+        QtGui.QWidget.__init__(self)
+        self.ui = Ui_Form_multi_io()
+        self.ui.setupUi(self)
+
+        self.filename = ''
+
+        self.checkboxes = []
+        self.threshold = 0
+
+        QtCore.QObject.connect(self.ui.pushButton_multi_io, QtCore.SIGNAL("clicked()"), self.graph_multi_io_test)
+
+    def set_threshold(self, thresh):
+        self.ui.doubleSpinBox_thresh.setValue(thresh)
+        self.threshold = thresh
+
+    def populate_checkboxes(self, filename):
+        self.filename = filename
+
+        self.ui.label_title.setText(str.split(str(filename), '/')[-1])
+        h_file = h5py.File(unicode(filename), 'r')
+
+        tests = {}
+        for key in h_file.keys():
+            if 'segment' in key:
+                for test in h_file[key].keys():
+                    tests[test] = int(test.replace('test_', ''))
+
+        sorted_tests = sorted(tests.items(), key=operator.itemgetter(1))
+
+        # Create the layout to populate
+        layout = QtGui.QGridLayout()
+        for test in sorted_tests:
+            checkbox = QtGui.QCheckBox(test[0])
+            layout.addWidget(checkbox)
+            self.checkboxes.append(checkbox)
+        self.ui.scrollAreaWidgetContents.setLayout(layout)
+
+        h_file.close()
+        print 'done'
+
+    def graph_multi_io_test(self):
+        print 'multi io test'
+
+        h_file = h5py.File(unicode(self.filename), 'r')
+        thresh = self.ui.doubleSpinBox_thresh.value()
+
+        target_tests = []
+        # Get tests to run
+        for box in self.checkboxes:
+            if box.checkState():
+                target_tests.append(box.text())
+
+        axes = []
+        for target_test in target_tests:
+
+            # Find target segment
+            for segment in h_file.keys():
+                for test in h_file[segment].keys():
+                    if target_test == test:
+                        target_seg = segment
+                        target_test = test
+
+            fs = h_file[target_seg].attrs['samplerate_ad']
+            reps = h_file[target_seg][target_test].attrs['reps']
+            start_time = h_file[target_seg][target_test].attrs['start']
+            trace_data = h_file[target_seg][target_test].value
+
+            stim_info = eval(h_file[target_seg][target_test].attrs['stim'])
+
+            autoRasters = {}
+            for tStim in range(1, len(stim_info)):
+                spl = int(stim_info[tStim]['components'][0]['intensity'])
+                traceKey = 'None_' + str(spl).zfill(2)
+                spikeTrains = pd.DataFrame([])
+                nspk = 0
+                for tRep in range(reps):
+
+                    if len(trace_data.shape) == 3:
+                        trace = trace_data[tStim][tRep]
+                        pass
+                    elif len(trace_data.shape) == 4:
+
+                        # TODO Add Support For Multiple Channels
+
+                        # tchan = int(self.ui.comboBox_channel.currentText().replace('channel_', '')) - 1
+                        # trace = trace_data[tStim][tRep][tchan]
+
+                        # Currently uses one channel
+                        trace = trace_data[tStim][tRep][0]
+                        pass
+                    else:
+                        self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
+                        return
+
+                    spike_times = 1000 * np.array(get_spike_times(trace, thresh, fs))
+                    spike_times_s = pd.Series(spike_times)
+
+                    if spike_times_s.size >= nspk:
+                        spikeTrains = spikeTrains.reindex(spike_times_s.index)
+                        nspk = spike_times_s.size
+                    spikeTrains[str(tRep)] = spike_times_s
+                autoRasters[traceKey] = spikeTrains
+            rasters = autoRasters
+
+            tuning = []
+
+            sortedKeys = sorted(rasters.keys())
+            for traceKey in sortedKeys:
+                spl = int(traceKey.split('_')[-1])
+                raster = rasters[traceKey]
+                res = ResponseStats(raster)
+                tuning.append({'intensity': spl, 'response': res[0], 'responseSTD': res[1]})
+
+            tuningCurves = pd.DataFrame(tuning)
+
+            if axes:
+                tuningCurves.plot(x='intensity', y='response', ax=axes, yerr='responseSTD', capthick=1, label=str(target_test))
+            else:
+                axes = tuningCurves.plot(x='intensity', y='response', yerr='responseSTD', capthick=1, label=str(target_test))
+
+        plt.legend(loc='upper left', fontsize=12, frameon=True)
+        sns.despine()
+        plt.grid(False)
+        plt.xlabel('Intensity (dB)', size=14)
+        plt.ylabel('Response Rate (Hz)', size=14)
+        plt.tick_params(axis='both', which='major', labelsize=14)
+        plt.title(str.split(str(self.filename), '/')[-1].replace('.hdf5', '') + ' Multi I/O')
+
+        plt.figtext(.02, .02, 'Threshold: ' + str(self.ui.doubleSpinBox_thresh.value()) + ' V')
+
+        plt.show()
+        h_file.close()
 
 class MyForm(QtGui.QMainWindow):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.dialog = QtGui.QMainWindow
+
         self.filename = ''
         self.threshold = 0
-        self.h_file = h5py.File
 
         self.message_num = 0
 
@@ -34,7 +171,8 @@ class MyForm(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.pushButton_historgram, QtCore.SIGNAL("clicked()"), self.graph_historgram)
         QtCore.QObject.connect(self.ui.pushButton_tuning_curve_1, QtCore.SIGNAL("clicked()"), self.graph_rainbow_tuning_curve)
         QtCore.QObject.connect(self.ui.pushButton_tuning_curve_2, QtCore.SIGNAL("clicked()"), self.graph_tuning_curve)
-        QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_io_test)
+        # QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_io_test)
+        QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_multi_io_test)
 
         QtCore.QObject.connect(self.ui.pushButton_browse, QtCore.SIGNAL("clicked()"), self.browse)
         QtCore.QObject.connect(self.ui.pushButton_auto_threshold, QtCore.SIGNAL("clicked()"), self.auto_threshold)
@@ -65,7 +203,7 @@ class MyForm(QtGui.QMainWindow):
         if self.filename != '':
             if '.hdf5' in self.filename:
                 try:
-                    self.h_file = h5py.File(unicode(self.filename), 'r')
+                    h_file = h5py.File(unicode(self.filename), 'r')
                 except IOError:
                     self.add_message('Error: I/O Error')
                     self.ui.label_test_num.setEnabled(False)
@@ -73,9 +211,9 @@ class MyForm(QtGui.QMainWindow):
                     return
 
                 tests = {}
-                for key in self.h_file.keys():
+                for key in h_file.keys():
                     if 'segment' in key:
-                        for test in self.h_file[key].keys():
+                        for test in h_file[key].keys():
                             tests[test] = int(test.replace('test_', ''))
 
                 sorted_tests = sorted(tests.items(), key=operator.itemgetter(1))
@@ -85,6 +223,9 @@ class MyForm(QtGui.QMainWindow):
 
                 self.ui.label_test_num.setEnabled(True)
                 self.ui.comboBox_test_num.setEnabled(True)
+
+                h_file.close()
+
             else:
                 self.add_message('Error: Must select a .hdf5 file.')
                 self.ui.label_test_num.setEnabled(False)
@@ -135,6 +276,8 @@ class MyForm(QtGui.QMainWindow):
         self.ui.doubleSpinBox_threshold.setValue(thresh)
         self.update_thresh()
 
+        h_file.close()
+
     def generate_view(self):
         filename = self.filename = self.ui.lineEdit_file_name.text()
 
@@ -145,27 +288,29 @@ class MyForm(QtGui.QMainWindow):
         else:
             return
 
+        # clear view
+        self.ui.view.clearTraces()
+        self.ui.view.clearMouse()
+        self.ui.view.clearFocus()
+        self.ui.view.clearMask()
+        self.ui.view.clearData(axeskey='response')
+        self.ui.view.tracePlot.clear()
+        self.ui.view.rasterPlot.clear()
+        self.ui.view.stimPlot.clear()
+        self.ui.view.trace_stash = []
+
         if self.ui.radioButton_normal.isChecked():
             self.ui.view.invertPolarity(False)
 
         if self.ui.radioButton_inverse.isChecked():
             self.ui.view.invertPolarity(True)
 
-        for key in self.h_file.keys():
+        for key in h_file.keys():
             if 'segment' in key:
-                for test in self.h_file[key].keys():
+                for test in h_file[key].keys():
                     if target_test == test:
                         target_seg = key
                         target_test = test
-
-        # if target_seg.replace('/', '') in h_file and 'stim' in h_file[target_seg][target_test].attrs:
-        #     stimuli = json.loads(h_file[target_seg][target_test].attrs['stim'])
-        #     stimulus = stimuli[0]
-        #     fs = stimulus['samplerate_da']
-        #     print 'Type 1' # Not the correct data???
-        # else:
-        #     fs = h_file[target_seg].attrs['samplerate_ad']
-        #     print 'Type 2'
 
         # Makes the assumption that all of the traces are of the same type
         stim_info = eval(h_file[target_seg][target_test].attrs['stim'])
@@ -251,6 +396,8 @@ class MyForm(QtGui.QMainWindow):
             self.ui.radioButton_normal.setEnabled(True)
             self.ui.radioButton_inverse.setEnabled(True)
 
+        h_file.close()
+
     def valid_filename(self, filename):
         # Validate filename
         if filename != '':
@@ -286,14 +433,15 @@ class MyForm(QtGui.QMainWindow):
             self.ui.label_trace.setEnabled(False)
             self.ui.comboBox_trace.setEnabled(False)
             self.ui.comboBox_trace.clear()
+            h_file.close()
             return
         else:
             self.ui.label_trace.setEnabled(True)
             self.ui.comboBox_trace.setEnabled(True)
 
-        for key in self.h_file.keys():
+        for key in h_file.keys():
             if 'segment' in key:
-                for test in self.h_file[key].keys():
+                for test in h_file[key].keys():
                     if target_test == test:
                         target_seg = key
                         target_test = test
@@ -305,6 +453,8 @@ class MyForm(QtGui.QMainWindow):
 
         self.ui.label_trace.setEnabled(True)
         self.ui.comboBox_trace.setEnabled(True)
+
+        h_file.close()
 
     def load_reps(self):
         self.ui.comboBox_rep.clear()
@@ -322,6 +472,7 @@ class MyForm(QtGui.QMainWindow):
             self.ui.label_rep.setEnabled(False)
             self.ui.comboBox_rep.setEnabled(False)
             self.ui.comboBox_rep.clear()
+            h_file.close()
             return
         else:
             self.ui.label_rep.setEnabled(True)
@@ -329,9 +480,9 @@ class MyForm(QtGui.QMainWindow):
 
         self.ui.comboBox_rep.addItem('All')
 
-        for key in self.h_file.keys():
+        for key in h_file.keys():
             if 'segment' in key:
-                for test in self.h_file[key].keys():
+                for test in h_file[key].keys():
                     if target_test == test:
                         target_seg = key
                         target_test = test
@@ -340,6 +491,8 @@ class MyForm(QtGui.QMainWindow):
 
         for i in range(reps):
             self.ui.comboBox_rep.addItem('rep_' + str(i+1))
+
+        h_file.close()
 
     def load_channels(self):
         self.ui.comboBox_channel.clear()
@@ -361,9 +514,9 @@ class MyForm(QtGui.QMainWindow):
             self.ui.label_channel.setEnabled(True)
             self.ui.comboBox_channel.setEnabled(True)
 
-        for key in self.h_file.keys():
+        for key in h_file.keys():
             if 'segment' in key:
-                for test in self.h_file[key].keys():
+                for test in h_file[key].keys():
                     if target_test == test:
                         target_seg = key
                         target_test = test
@@ -381,6 +534,8 @@ class MyForm(QtGui.QMainWindow):
 
         if self.ui.comboBox_trace.currentText() != '' and self.ui.comboBox_rep.currentText() != '' and self.ui.comboBox_channel != '':
             self.generate_view()
+
+        h_file.close()
 
     def update_thresh(self):
         self.ui.view.setThreshold(self.ui.doubleSpinBox_threshold.value())
@@ -435,6 +590,7 @@ class MyForm(QtGui.QMainWindow):
         duration = trace_data.shape[-1] / fs * 1000
         if stim_info[1]['components'][0]['stim_type'] != 'Pure Tone':
             self.add_message('Cannot generate raster with stim type "' + str(stim_info[1]['components'][0]['stim_type']) + '".')
+            h_file.close()
             return
 
         autoRasters = {}
@@ -471,6 +627,20 @@ class MyForm(QtGui.QMainWindow):
         h_file.close()
 
         return autoRasters
+
+    def graph_multi_io_test(self):
+        self.dialog = MultiIOPopup()
+
+        filename = self.filename = self.ui.lineEdit_file_name.text()
+
+        # Validate filename
+        if not self.valid_filename(filename):
+            return
+
+        self.dialog.populate_checkboxes(filename)
+        self.dialog.set_threshold(self.ui.doubleSpinBox_threshold.value())
+
+        self.dialog.show()
 
     def graph_io_test(self):
         filename = self.filename = self.ui.lineEdit_file_name.text()
@@ -699,6 +869,7 @@ class MyForm(QtGui.QMainWindow):
                 pass
             else:
                 self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
+                h_file.close()
                 return
 
             spike_times = 1000 * np.array(get_spike_times(trace, thresh, fs))

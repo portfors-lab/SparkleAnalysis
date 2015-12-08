@@ -16,6 +16,10 @@
   <property name="windowTitle">
    <string>Sparkle Analysis</string>
   </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>horsey.png</normaloff>horsey.png</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="1" column="0">

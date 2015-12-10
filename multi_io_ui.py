@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'c:/Users/Joel/Documents/AnalysisGui/multi_io.ui'
 #
-# Created: Tue Dec 08 10:45:55 2015
+# Created: Thu Dec 10 10:38:05 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -40,9 +40,12 @@ class Ui_Form_multi_io(object):
         self.gridLayout_2.setObjectName(_fromUtf8("gridLayout_2"))
         self.pushButton_multi_io = QtGui.QPushButton(self.centralwidget)
         self.pushButton_multi_io.setObjectName(_fromUtf8("pushButton_multi_io"))
-        self.gridLayout_2.addWidget(self.pushButton_multi_io, 0, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.pushButton_multi_io, 0, 2, 1, 1)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.gridLayout_2.addItem(spacerItem, 0, 0, 1, 1)
+        self.pushButton_auto_threshold = QtGui.QPushButton(self.centralwidget)
+        self.pushButton_auto_threshold.setObjectName(_fromUtf8("pushButton_auto_threshold"))
+        self.gridLayout_2.addWidget(self.pushButton_auto_threshold, 0, 1, 1, 1)
         self.gridLayout.addLayout(self.gridLayout_2, 6, 0, 1, 1)
         self.scrollArea = QtGui.QScrollArea(self.centralwidget)
         self.scrollArea.setFrameShape(QtGui.QFrame.Panel)
@@ -84,5 +87,6 @@ class Ui_Form_multi_io(object):
     def retranslateUi(self, Form_multi_io):
         Form_multi_io.setWindowTitle(_translate("Form_multi_io", "Multi I/O Plot", None))
         self.pushButton_multi_io.setText(_translate("Form_multi_io", "Plot", None))
+        self.pushButton_auto_threshold.setText(_translate("Form_multi_io", "Estimate Thresholds", None))
         self.label_title.setText(_translate("Form_multi_io", "Test Name", None))
 

@@ -15,6 +15,7 @@ from PyQt4 import QtCore, QtGui
 from main_ui import Ui_MainWindow
 from multi_io_ui import Ui_Form_multi_io
 
+
 class MultiIOPopup(QtGui.QMainWindow):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
@@ -29,6 +30,7 @@ class MultiIOPopup(QtGui.QMainWindow):
         self.threshold = 0
 
         QtCore.QObject.connect(self.ui.pushButton_multi_io, QtCore.SIGNAL("clicked()"), self.graph_multi_io_test)
+        QtCore.QObject.connect(self.ui.pushButton_auto_threshold, QtCore.SIGNAL("clicked()"), self.estimate_thresholds)
 
     def populate_checkboxes(self, filename, thresh):
         self.filename = filename
@@ -98,7 +100,7 @@ class MultiIOPopup(QtGui.QMainWindow):
 
             spnbox.setSuffix(' V')
             spnbox.setDecimals(4)
-            spnbox.setSingleStep(0.001)
+            spnbox.setSingleStep(0.0001)
             spnbox.setMinimum(-100)
             spnbox.setMaximum(100)
             spnbox.setValue(thresh)
@@ -111,10 +113,43 @@ class MultiIOPopup(QtGui.QMainWindow):
         self.ui.scrollAreaWidgetContents.setLayout(layout)
 
         h_file.close()
-        print 'done'
+
+    def estimate_thresholds(self):
+        thresh_fraction = 0.7
+
+        h_file = h5py.File(unicode(self.filename), 'r')
+
+        for row in range(len(self.checkboxes)):
+
+            for segment in h_file.keys():
+                for test in h_file[segment].keys():
+                    if self.checkboxes[row].text() == test:
+                        target_seg = segment
+                        target_test = test
+
+            trace_data = h_file[target_seg][target_test].value
+
+            if len(trace_data.shape) == 4:
+                trace_data = trace_data.squeeze()
+
+            # Still shape of 4
+            if len(trace_data.shape) == 4:
+
+                tchan = int(self.comboboxes[row].currentText().replace('channel_', '')) - 1
+
+                trace_data = trace_data[:, :, tchan, :]
+                trace_data = trace_data.squeeze()
+
+            # Compute threshold from average maximum of traces
+            max_trace = []
+            for n in range(len(trace_data[1, :, 0])):
+                max_trace.append(np.max(np.abs(trace_data[1, n, :])))
+            average_max = np.array(max_trace).mean()
+            thresh = thresh_fraction * average_max
+
+            self.spnboxes[row].setValue(thresh)
 
     def graph_multi_io_test(self):
-        print 'multi io test'
 
         h_file = h5py.File(unicode(self.filename), 'r')
 
@@ -151,15 +186,8 @@ class MultiIOPopup(QtGui.QMainWindow):
                         trace = trace_data[tStim][tRep]
                         pass
                     elif len(trace_data.shape) == 4:
-
-                        # TODO Add Support For Multiple Channels
-
-                        # tchan = int(self.ui.comboBox_channel.currentText().replace('channel_', '')) - 1
-                        tchan = int(self.comboboxes[row].currentText().replace('channel_', '')) -1
+                        tchan = int(self.comboboxes[row].currentText().replace('channel_', '')) - 1
                         trace = trace_data[tStim][tRep][tchan]
-
-                        # Currently uses one channel
-                        #trace = trace_data[tStim][tRep][0]
                         pass
                     else:
                         self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
@@ -201,6 +229,7 @@ class MultiIOPopup(QtGui.QMainWindow):
 
         plt.show()
         h_file.close()
+
 
 class MyForm(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -1092,11 +1121,6 @@ class MyForm(QtGui.QMainWindow):
         self.ui.view.setThreshold(0)
 
 
-def get_tuning_data(filename):
-    print filename
-
-    pass
-
 def ResponseStats(spikeTrains, stimStart=10, stimDuration=50):
     """ Average spike rate during the stimulus response.
     :param spikeTrains, pandas.DataFrame of spike times for each cycle
@@ -1123,6 +1147,7 @@ def ResponseStats(spikeTrains, stimStart=10, stimDuration=50):
         else:
             spontStats = [0, 0]
     return responseStats
+
 
 def get_spike_times(signal, threshold, fs):
     times = []

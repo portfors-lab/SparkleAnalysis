@@ -9,11 +9,207 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import matplotlib
-matplotlib.style.use('ggplot')
 
 from PyQt4 import QtCore, QtGui
 from main_ui import Ui_MainWindow
 from multi_io_ui import Ui_Form_multi_io
+from spike_rates_ui import Ui_Form_spike_rates
+
+matplotlib.style.use('ggplot')
+
+
+class SpikeRatesPopup(QtGui.QMainWindow):
+    def __init__(self, parent=None):
+        QtGui.QWidget.__init__(self)
+        self.ui = Ui_Form_spike_rates()
+        self.ui.setupUi(self)
+
+        self.filename = ''
+
+        self.checkboxes = []
+        self.comboboxes = []
+
+        QtCore.QObject.connect(self.ui.pushButton_spike_rates, QtCore.SIGNAL("clicked()"), self.graph_spike_rates)
+        QtCore.QObject.connect(self.ui.horizontalSlider, QtCore.SIGNAL("valueChanged(int)"), self.update_spontaneous)
+        QtCore.QObject.connect(self.ui.doubleSpinBox, QtCore.SIGNAL("valueChanged(const QString&)"), self.update_spontaneous2)
+
+    def populate_checkboxes(self, filename):
+        self.filename = filename
+
+        self.ui.label_title.setText(str.split(str(filename), '/')[-1])
+        h_file = h5py.File(unicode(filename), 'r')
+
+        tests = {}
+        for key in h_file.keys():
+            if 'segment' in key:
+                for test in h_file[key].keys():
+                    tests[test] = int(test.replace('test_', ''))
+
+        sorted_tests = sorted(tests.items(), key=operator.itemgetter(1))
+
+        # Create the layout to populate
+        layout = QtGui.QGridLayout()
+
+        title_test = QtGui.QLabel('Test')
+        title_chan = QtGui.QLabel('Channel')
+
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        font.setBold(True)
+
+        title_test.setFont(font)
+        title_chan.setFont(font)
+
+        layout.addWidget(title_test, 0, 0)
+        layout.addWidget(title_chan, 0, 1)
+
+        row_count = 1
+        for test in sorted_tests:
+            checkbox = QtGui.QCheckBox(test[0])
+            combobox = QtGui.QComboBox()
+
+            layout.addWidget(checkbox, row_count, 0)
+            self.checkboxes.append(checkbox)
+
+            # Find target segment
+            for segment in h_file.keys():
+                for s_test in h_file[segment].keys():
+                    if test[0] == s_test:
+                        target_seg = segment
+                        target_test = s_test
+
+            if len(h_file[target_seg][target_test].value.shape) > 3:
+                channels = h_file[target_seg][target_test].value.shape[2]
+            else:
+                channels = 1
+
+            if channels == 1:
+                combobox.addItem('channel_1')
+            else:
+                for i in range(channels):
+                    combobox.addItem('channel_' + str(i+1))
+
+            if combobox.count() < 2:
+                combobox.setEnabled(False)
+
+            layout.addWidget(combobox, row_count, 1)
+            self.comboboxes.append(combobox)
+
+            row_count += 1
+
+        self.ui.scrollAreaWidgetContents.setLayout(layout)
+
+        h_file.close()
+
+    def graph_spike_rates(self):
+        print 'Spike Rates'
+
+        h_file = h5py.File(unicode(self.filename), 'r')
+
+        target_rows = []
+        for i in range(len(self.checkboxes)):
+            if self.checkboxes[i].checkState():
+                target_rows.append(i)
+
+        axes = []
+        timeStamp = []
+        spontAve = []
+        spontSTD = []
+        responseAve = []
+        responseSTD = []
+        for row in target_rows:
+
+            for segment in h_file.keys():
+                for test in h_file[segment].keys():
+                    if self.checkboxes[row].text() == test:
+                        target_seg = segment
+                        target_test = test
+
+            fs = h_file[target_seg].attrs['samplerate_ad']
+            reps = h_file[target_seg][target_test].attrs['reps']
+            start_time = h_file[target_seg][target_test].attrs['start']
+            trace_data = h_file[target_seg][target_test].value
+
+            stim_info = eval(h_file[target_seg][target_test].attrs['stim'])
+
+            # Test Threshold
+            trace_data = h_file[target_seg][target_test].value
+            if len(trace_data.shape) == 4:
+                trace_data = trace_data.squeeze()
+            # Still shape of 4
+            if len(trace_data.shape) == 4:
+                tchan = int(self.comboboxes[row].currentText().replace('channel_', '')) - 1
+                trace_data = trace_data[:, :, tchan, :]
+                trace_data = trace_data.squeeze()
+            # Compute threshold from average maximum of traces
+            max_trace = []
+            for n in range(len(trace_data[1, :, 0])):
+                max_trace.append(np.max(np.abs(trace_data[1, n, :])))
+            average_max = np.array(max_trace).mean()
+            thresh = 0.7 * average_max
+
+            autoRasters = {}
+            for tStim in range(1, len(stim_info)):
+                spl = int(stim_info[tStim]['components'][0]['intensity'])
+                traceKey = 'None_' + str(spl).zfill(2)
+                spikeTrains = pd.DataFrame([])
+                nspk = 0
+                # print 'type:', stim_info[tStim]['components'][0]['stim_type']
+                # print 'start:', stim_info[tStim]['components'][0]['start_s']
+                # print 'duration:', stim_info[tStim]['components'][0]['duration']
+                for tRep in range(reps):
+
+                    if len(trace_data.shape) == 3:
+                        trace = trace_data[tStim][tRep]
+                        pass
+                    elif len(trace_data.shape) == 4:
+                        tchan = int(self.comboboxes[row].currentText().replace('channel_', '')) - 1
+                        trace = trace_data[tStim][tRep][tchan]
+                        pass
+                    else:
+                        self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
+                        return
+
+                    spike_times = 1000 * np.array(get_spike_times(trace, thresh, fs))
+                    spike_times_s = pd.Series(spike_times)
+
+                    if spike_times_s.size >= nspk:
+                        spikeTrains = spikeTrains.reindex(spike_times_s.index)
+                        nspk = spike_times_s.size
+                    spikeTrains[str(tRep)] = spike_times_s
+                autoRasters[traceKey] = spikeTrains
+            rasters = autoRasters
+            duration = trace_data.shape[-1] / fs
+
+            # SpontaneousStats
+            spontSpikeCount = []
+            for k in rasters.keys():
+                spk = rasters[k]
+                spontSpikeCount.append(len(spk.dropna()) / float(duration))
+                if len(spontSpikeCount) > 0:
+                    spontStats = [np.mean(spontSpikeCount), np.std(spontSpikeCount)]
+                else:
+                    spontStats = [0, 0]
+
+            # ResponseStats
+            # Assumes all stim are the same for the test
+            print 'start:', stim_info[1]['components'][0]['start_s']
+            print 'duration:', stim_info[1]['components'][0]['duration']
+
+
+            spontAve.append(spontStats[0])
+            spontSTD.append(spontStats[1])
+            # responseAve.append(responseStats[0])
+            # responseSTD.append(responseStats[1])
+
+
+    def update_spontaneous(self):
+        # print self.ui.horizontalSlider.value()
+        self.ui.doubleSpinBox.setValue(self.ui.horizontalSlider.value())
+
+    def update_spontaneous2(self):
+        # print self.ui.doubleSpinBox.value()
+        self.ui.horizontalSlider.setValue(self.ui.doubleSpinBox.value())
 
 
 class MultiIOPopup(QtGui.QMainWindow):
@@ -245,12 +441,16 @@ class MyForm(QtGui.QMainWindow):
 
         self.ui.textEdit.setReadOnly(True)
 
+        # TODO Complete Spike Rates
+        self.ui.pushButton_spike_rates.setEnabled(False)
+
         QtCore.QObject.connect(self.ui.pushButton_raster, QtCore.SIGNAL("clicked()"), self.graph_raster)
         QtCore.QObject.connect(self.ui.pushButton_historgram, QtCore.SIGNAL("clicked()"), self.graph_historgram)
         QtCore.QObject.connect(self.ui.pushButton_tuning_curve_1, QtCore.SIGNAL("clicked()"), self.graph_rainbow_tuning_curve)
         QtCore.QObject.connect(self.ui.pushButton_tuning_curve_2, QtCore.SIGNAL("clicked()"), self.graph_tuning_curve)
         # QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_io_test)
         QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_multi_io_test)
+        QtCore.QObject.connect(self.ui.pushButton_spike_rates, QtCore.SIGNAL("clicked()"), self.graph_spike_rates)
 
         QtCore.QObject.connect(self.ui.pushButton_browse, QtCore.SIGNAL("clicked()"), self.browse)
         QtCore.QObject.connect(self.ui.pushButton_auto_threshold, QtCore.SIGNAL("clicked()"), self.auto_threshold)
@@ -703,6 +903,19 @@ class MyForm(QtGui.QMainWindow):
 
         return autoRasters
 
+    def graph_spike_rates(self):
+        self.dialog = SpikeRatesPopup()
+
+        filename = self.filename = self.ui.lineEdit_file_name.text()
+
+        # Validate filename
+        if not self.valid_filename(filename):
+            return
+
+        self.dialog.populate_checkboxes(filename)
+        self.dialog.setWindowIcon(QtGui.QIcon('horsey.png'))
+        self.dialog.show()
+
     def graph_multi_io_test(self):
         self.dialog = MultiIOPopup()
 
@@ -713,7 +926,7 @@ class MyForm(QtGui.QMainWindow):
             return
 
         self.dialog.populate_checkboxes(filename, self.ui.doubleSpinBox_threshold.value())
-
+        self.dialog.setWindowIcon(QtGui.QIcon('horsey.png'))
         self.dialog.show()
 
     def graph_io_test(self):
@@ -1118,7 +1331,6 @@ class MyForm(QtGui.QMainWindow):
         self.ui.view.rasterPlot.clear()
         self.ui.view.stimPlot.clear()
         self.ui.view.trace_stash = []
-        self.ui.view.setThreshold(0)
 
 
 def ResponseStats(spikeTrains, stimStart=10, stimDuration=50):
@@ -1204,5 +1416,6 @@ def get_spike_times(signal, threshold, fs):
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     myApp = MyForm()
+    myApp.setWindowIcon(QtGui.QIcon('horsey.png'))
     myApp.show()
     sys.exit(app.exec_())

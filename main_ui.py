@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'c:/Users/Joel/Documents/AnalysisGui/main.ui'
 #
-# Created: Wed Dec 02 17:31:41 2015
+# Created: Mon Dec 14 12:49:48 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -28,6 +28,9 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.setEnabled(True)
         MainWindow.resize(681, 650)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8("horsey.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        MainWindow.setWindowIcon(icon)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.gridLayout = QtGui.QGridLayout(self.centralwidget)
@@ -323,11 +326,16 @@ class Ui_MainWindow(object):
         self.pushButton_tuning_curve_1.setObjectName(_fromUtf8("pushButton_tuning_curve_1"))
         self.gridLayout_3.addWidget(self.pushButton_tuning_curve_1, 2, 0, 1, 1)
         self.pushButton_raster = QtGui.QPushButton(self.centralwidget)
+        self.pushButton_raster.setStatusTip(_fromUtf8(""))
+        self.pushButton_raster.setWhatsThis(_fromUtf8(""))
         self.pushButton_raster.setObjectName(_fromUtf8("pushButton_raster"))
         self.gridLayout_3.addWidget(self.pushButton_raster, 0, 0, 1, 1)
         self.pushButton_io_test = QtGui.QPushButton(self.centralwidget)
         self.pushButton_io_test.setObjectName(_fromUtf8("pushButton_io_test"))
         self.gridLayout_3.addWidget(self.pushButton_io_test, 4, 0, 1, 1)
+        self.pushButton_spike_rates = QtGui.QPushButton(self.centralwidget)
+        self.pushButton_spike_rates.setObjectName(_fromUtf8("pushButton_spike_rates"))
+        self.gridLayout_3.addWidget(self.pushButton_spike_rates, 5, 0, 1, 1)
         self.horizontalLayout_2.addLayout(self.gridLayout_3)
         self.gridLayout.addLayout(self.horizontalLayout_2, 2, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -376,10 +384,17 @@ class Ui_MainWindow(object):
         self.radioButton_inverse.setText(_translate("MainWindow", "Inverse", None))
         self.label_3.setText(_translate("MainWindow", "Stim Type:", None))
         self.label_stim_type.setText(_translate("MainWindow", "None", None))
+        self.pushButton_historgram.setToolTip(_translate("MainWindow", "Creates a histogram based  on your test number, trace and threshold.", None))
         self.pushButton_historgram.setText(_translate("MainWindow", "Histogram", None))
+        self.pushButton_tuning_curve_2.setToolTip(_translate("MainWindow", "Creates a tuning curve based on your test number and threshold.", None))
         self.pushButton_tuning_curve_2.setText(_translate("MainWindow", "Tuning Curve 2", None))
+        self.pushButton_tuning_curve_1.setToolTip(_translate("MainWindow", "Creates a tuning curve based on your test number and threshold.", None))
         self.pushButton_tuning_curve_1.setText(_translate("MainWindow", "Tuning Curve 1", None))
+        self.pushButton_raster.setToolTip(_translate("MainWindow", "Creates a raster based  on your test number, trace and threshold.", None))
         self.pushButton_raster.setText(_translate("MainWindow", "Raster", None))
+        self.pushButton_io_test.setToolTip(_translate("MainWindow", "Opens a window for creating I/O plots.", None))
         self.pushButton_io_test.setText(_translate("MainWindow", "I/O Test", None))
+        self.pushButton_spike_rates.setToolTip(_translate("MainWindow", "Opens a window for creating spike rate plots.", None))
+        self.pushButton_spike_rates.setText(_translate("MainWindow", "Spike Rates", None))
 
 from pyqtgraph_widgets import TraceWidget

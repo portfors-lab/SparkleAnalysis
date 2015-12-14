@@ -609,6 +609,9 @@
        <layout class="QGridLayout" name="gridLayout_3">
         <item row="1" column="0">
          <widget class="QPushButton" name="pushButton_historgram">
+          <property name="toolTip">
+           <string>Creates a histogram based  on your test number, trace and threshold.</string>
+          </property>
           <property name="text">
            <string>Histogram</string>
           </property>
@@ -616,6 +619,9 @@
         </item>
         <item row="3" column="0">
          <widget class="QPushButton" name="pushButton_tuning_curve_2">
+          <property name="toolTip">
+           <string>Creates a tuning curve based on your test number and threshold.</string>
+          </property>
           <property name="text">
            <string>Tuning Curve 2</string>
           </property>
@@ -623,6 +629,9 @@
         </item>
         <item row="2" column="0">
          <widget class="QPushButton" name="pushButton_tuning_curve_1">
+          <property name="toolTip">
+           <string>Creates a tuning curve based on your test number and threshold.</string>
+          </property>
           <property name="text">
            <string>Tuning Curve 1</string>
           </property>
@@ -630,6 +639,15 @@
         </item>
         <item row="0" column="0">
          <widget class="QPushButton" name="pushButton_raster">
+          <property name="toolTip">
+           <string>Creates a raster based  on your test number, trace and threshold.</string>
+          </property>
+          <property name="statusTip">
+           <string/>
+          </property>
+          <property name="whatsThis">
+           <string/>
+          </property>
           <property name="text">
            <string>Raster</string>
           </property>
@@ -637,8 +655,21 @@
         </item>
         <item row="4" column="0">
          <widget class="QPushButton" name="pushButton_io_test">
+          <property name="toolTip">
+           <string>Opens a window for creating I/O plots.</string>
+          </property>
           <property name="text">
            <string>I/O Test</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0">
+         <widget class="QPushButton" name="pushButton_spike_rates">
+          <property name="toolTip">
+           <string>Opens a window for creating spike rate plots.</string>
+          </property>
+          <property name="text">
+           <string>Spike Rates</string>
           </property>
          </widget>
         </item>

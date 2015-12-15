@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'c:/Users/Joel/Documents/AnalysisGui/multi_io.ui'
 #
-# Created: Thu Dec 10 10:38:05 2015
+# Created: Mon Dec 14 15:35:55 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -86,7 +86,9 @@ class Ui_Form_multi_io(object):
 
     def retranslateUi(self, Form_multi_io):
         Form_multi_io.setWindowTitle(_translate("Form_multi_io", "Multi I/O Plot", None))
+        self.pushButton_multi_io.setToolTip(_translate("Form_multi_io", "Graphs I/O tests based on the selected tests and their thresholds.", None))
         self.pushButton_multi_io.setText(_translate("Form_multi_io", "Plot", None))
+        self.pushButton_auto_threshold.setToolTip(_translate("Form_multi_io", "Estimates the thresholds of all the tests.", None))
         self.pushButton_auto_threshold.setText(_translate("Form_multi_io", "Estimate Thresholds", None))
         self.label_title.setText(_translate("Form_multi_io", "Test Name", None))
 

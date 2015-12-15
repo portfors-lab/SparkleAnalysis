@@ -25,7 +25,7 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="6" column="0">
+    <item row="8" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QLabel" name="label_min">
@@ -59,7 +59,7 @@
       </item>
      </layout>
     </item>
-    <item row="7" column="0">
+    <item row="9" column="0">
      <widget class="QSlider" name="horizontalSlider">
       <property name="sliderPosition">
        <number>50</number>
@@ -130,13 +130,13 @@
          <x>0</x>
          <y>0</y>
          <width>280</width>
-         <height>199</height>
+         <height>143</height>
         </rect>
        </property>
       </widget>
      </widget>
     </item>
-    <item row="9" column="0">
+    <item row="11" column="0">
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="1">
        <widget class="QPushButton" name="pushButton_spike_rates">
@@ -160,7 +160,7 @@
       </item>
      </layout>
     </item>
-    <item row="8" column="0">
+    <item row="10" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
        <spacer name="horizontalSpacer_6">
@@ -190,6 +190,60 @@
          </size>
         </property>
        </spacer>
+      </item>
+     </layout>
+    </item>
+    <item row="6" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <widget class="QLabel" name="label_drugs_on">
+        <property name="text">
+         <string>Drugs On Time</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_8">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_drugs_off">
+        <property name="text">
+         <string>Drugs Off Time</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="7" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <widget class="QTimeEdit" name="timeEdit_2"/>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_7">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QTimeEdit" name="timeEdit"/>
       </item>
      </layout>
     </item>

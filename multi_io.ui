@@ -29,6 +29,9 @@
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="2">
        <widget class="QPushButton" name="pushButton_multi_io">
+        <property name="toolTip">
+         <string>Graphs I/O tests based on the selected tests and their thresholds.</string>
+        </property>
         <property name="text">
          <string>Plot</string>
         </property>
@@ -49,6 +52,9 @@
       </item>
       <item row="0" column="1">
        <widget class="QPushButton" name="pushButton_auto_threshold">
+        <property name="toolTip">
+         <string>Estimates the thresholds of all the tests.</string>
+        </property>
         <property name="text">
          <string>Estimate Thresholds</string>
         </property>

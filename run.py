@@ -181,7 +181,7 @@ class SpikeRatesPopup(QtGui.QMainWindow):
             rasters = autoRasters
             duration = trace_data.shape[-1] / fs
 
-            # SpontaneousStats
+            # --- SpontaneousStats ---
             spontSpikeCount = []
             for k in rasters.keys():
                 spk = rasters[k]
@@ -191,17 +191,36 @@ class SpikeRatesPopup(QtGui.QMainWindow):
                 else:
                     spontStats = [0, 0]
 
-            # ResponseStats
             # Assumes all stim are the same for the test
             print 'start:', stim_info[1]['components'][0]['start_s']
             print 'duration:', stim_info[1]['components'][0]['duration']
+            stimStart = stim_info[1]['components'][0]['start_s']
+            stimDuration = stim_info[1]['components'][0]['duration']
+
+            # --- ResponseStats ---
+            dur = 0.001 * stimDuration
+            responseSpikeCount = []
+
+            for k in spikeTrains.keys():
+                spk = spikeTrains[k]
+                responseSpikeCount.append(len(spk[spk < stimStart + stimDuration + 10]) / dur)
+                if len(responseSpikeCount) > 0:
+                    responseStats = [np.mean(responseSpikeCount), np.std(responseSpikeCount)]
+                else:
+                    responseStats = [0, 0]
 
 
             spontAve.append(spontStats[0])
             spontSTD.append(spontStats[1])
-            # responseAve.append(responseStats[0])
-            # responseSTD.append(responseStats[1])
+            responseAve.append(responseStats[0])
+            responseSTD.append(responseStats[1])
 
+        # --- Plot the time dependent change in rates ---
+        if target_rows:
+            print target_rows
+
+    def get_pharma_times(self, data):
+        pass
 
     def update_spontaneous(self):
         # print self.ui.horizontalSlider.value()
@@ -442,7 +461,7 @@ class MyForm(QtGui.QMainWindow):
         self.ui.textEdit.setReadOnly(True)
 
         # TODO Complete Spike Rates
-        self.ui.pushButton_spike_rates.setEnabled(False)
+        # self.ui.pushButton_spike_rates.setEnabled(False)
 
         QtCore.QObject.connect(self.ui.pushButton_raster, QtCore.SIGNAL("clicked()"), self.graph_raster)
         QtCore.QObject.connect(self.ui.pushButton_historgram, QtCore.SIGNAL("clicked()"), self.graph_historgram)
@@ -485,6 +504,9 @@ class MyForm(QtGui.QMainWindow):
                 except IOError:
                     self.add_message('Error: I/O Error')
                     self.ui.label_test_num.setEnabled(False)
+                    self.ui.label_comments.setEnabled(False)
+                    self.ui.lineEdit_comments.setEnabled(False)
+                    self.ui.lineEdit_comments.setText('')
                     self.ui.comboBox_test_num.setEnabled(False)
                     return
 
@@ -500,6 +522,8 @@ class MyForm(QtGui.QMainWindow):
                     self.ui.comboBox_test_num.addItem(test[0])
 
                 self.ui.label_test_num.setEnabled(True)
+                self.ui.label_comments.setEnabled(True)
+                self.ui.lineEdit_comments.setEnabled(True)
                 self.ui.comboBox_test_num.setEnabled(True)
 
                 h_file.close()
@@ -507,11 +531,17 @@ class MyForm(QtGui.QMainWindow):
             else:
                 self.add_message('Error: Must select a .hdf5 file.')
                 self.ui.label_test_num.setEnabled(False)
+                self.ui.label_comments.setEnabled(False)
+                self.ui.lineEdit_comments.setEnabled(False)
+                self.ui.lineEdit_comments.setText('')
                 self.ui.comboBox_test_num.setEnabled(False)
                 return
         else:
             self.add_message('Error: Must select a file to open.')
             self.ui.label_test_num.setEnabled(False)
+            self.ui.label_comments.setEnabled(False)
+            self.ui.lineEdit_comments.setEnabled(False)
+            self.ui.lineEdit_comments.setText('')
             self.ui.comboBox_test_num.setEnabled(False)
             return
 
@@ -723,6 +753,9 @@ class MyForm(QtGui.QMainWindow):
 
         self.ui.label_trace.setEnabled(True)
         self.ui.comboBox_trace.setEnabled(True)
+
+        comment = h_file[target_seg].attrs['comment']
+        self.ui.lineEdit_comments.setText(comment)
 
         h_file.close()
 

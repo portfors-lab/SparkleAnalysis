@@ -461,7 +461,7 @@ class MyForm(QtGui.QMainWindow):
         self.ui.textEdit.setReadOnly(True)
 
         # TODO Complete Spike Rates
-        # self.ui.pushButton_spike_rates.setEnabled(False)
+        self.ui.pushButton_spike_rates.setEnabled(False)
 
         QtCore.QObject.connect(self.ui.pushButton_raster, QtCore.SIGNAL("clicked()"), self.graph_raster)
         QtCore.QObject.connect(self.ui.pushButton_historgram, QtCore.SIGNAL("clicked()"), self.graph_historgram)

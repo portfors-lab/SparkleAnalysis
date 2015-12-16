@@ -14,3 +14,7 @@ Extra analysis tools for viewing Sparkle data
 
 ###### Tuning Curve 2:
 ![alt tag](https://raw.githubusercontent.com/portfors-lab/SparkleAnalysis/master/screenshot_tuning_curve_2.png "Tuning Curve 2")
+
+###### Multi I/O:
+![alt tag](https://raw.githubusercontent.com/portfors-lab/SparkleAnalysis/master/screenshot_multi_io.png "Multi I/O Menu")
+![alt tag](https://raw.githubusercontent.com/portfors-lab/SparkleAnalysis/master/screenshot_multi_io_plot.png "Multi I/O Plot")

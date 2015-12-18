@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 from PyQt4 import QtCore, QtGui
-from main_ui import Ui_MainWindow
-from multi_io_ui import Ui_Form_multi_io
-from spike_rates_ui import Ui_Form_spike_rates
+from ui.main_ui import Ui_MainWindow
+from ui.multi_io_ui import Ui_Form_multi_io
+from ui.spike_rates_ui import Ui_Form_spike_rates
 
 matplotlib.style.use('ggplot')
 

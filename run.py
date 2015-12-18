@@ -1,4 +1,6 @@
+import os
 import sys
+import csv
 import h5py
 import operator
 import numpy as np
@@ -1092,6 +1094,34 @@ class MyForm(QtGui.QMainWindow):
 
         plt.show()
 
+        title = str.split(str(filename), '/')[-1].replace('.hdf5', '') + '_' \
+                    + str(self.ui.comboBox_test_num.currentText())
+
+        check_output_folders()
+
+        try:
+            out_file = open('output' + os.sep + 'tuning_curves' + os.sep + title + '_tuning_curve_1.csv', 'wb')
+        except IOError, e:
+            self.add_message('Unable to open ' + str(filename) + '\nError ' + str(e.errno) + ': ' + e.strerror + '\n')
+        writer = csv.writer(out_file)
+
+        writer.writerow(['File:', filename])
+        writer.writerow(['Test:', self.ui.comboBox_test_num.currentText()])
+        writer.writerow(['Threshold (V):', self.ui.doubleSpinBox_threshold.value()])
+        writer.writerow([])
+
+        for d in db:
+            tc_intensity = list(tuningCurves[tuningCurves['intensity'] == d]['intensity'])[0]
+            tc_freq = list(tuningCurves[tuningCurves['intensity'] == d]['freq'])
+            tc_response = list(tuningCurves[tuningCurves['intensity'] == d]['response'])
+
+            writer.writerow(['Intensity (dB):', tc_intensity])
+            writer.writerow(['Frequency (kHz):'] + tc_freq)
+            writer.writerow(['Response (Hz):'] + tc_response)
+            writer.writerow([])
+
+        out_file.close()
+
     def graph_tuning_curve(self):
         filename = self.filename = self.ui.lineEdit_file_name.text()
 
@@ -1364,6 +1394,19 @@ class MyForm(QtGui.QMainWindow):
         self.ui.view.rasterPlot.clear()
         self.ui.view.stimPlot.clear()
         self.ui.view.trace_stash = []
+
+def check_output_folders():
+    if not os.path.exists('output'):
+        os.makedirs('output')
+
+    # if not os.path.exists('output' + os.sep + 'rasters'):
+    #     os.makedirs('output' + os.sep + 'rasters')
+    #
+    # if not os.path.exists('output' + os.sep + 'histograms'):
+    #     os.makedirs('output' + os.sep + 'histograms')
+
+    if not os.path.exists('output' + os.sep + 'tuning_curves'):
+        os.makedirs('output' + os.sep + 'tuning_curves')
 
 
 def ResponseStats(spikeTrains, stimStart=10, stimDuration=50):

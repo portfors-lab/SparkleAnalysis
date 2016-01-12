@@ -323,8 +323,6 @@ class SpikeRatesPopup(QtGui.QMainWindow):
             plt.show()
             h_file.close()
 
-            print rateEffects
-
         elif len(target_rows) > 0:
             return rateEffects
         else:

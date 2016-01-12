@@ -3,6 +3,7 @@ import sys
 import csv
 import h5py
 import operator
+import spikestats
 import numpy as np
 import seaborn as sns
 import scipy.stats as stats
@@ -30,8 +31,15 @@ class SpikeRatesPopup(QtGui.QMainWindow):
 
         self.checkboxes = []
         self.comboboxes = []
+        self.spnboxes = []
+
+        # TODO Enable when implemented
+        self.ui.pushButton_auto_threshold.setEnabled(False)
+        self.ui.horizontalSlider.setEnabled(False)
+        self.ui.doubleSpinBox.setEnabled(False)
 
         QtCore.QObject.connect(self.ui.pushButton_spike_rates, QtCore.SIGNAL("clicked()"), self.graph_spike_rates)
+        QtCore.QObject.connect(self.ui.pushButton_auto_threshold, QtCore.SIGNAL("clicked()"), self.estimate_thresholds)
         QtCore.QObject.connect(self.ui.horizontalSlider, QtCore.SIGNAL("valueChanged(int)"), self.update_spontaneous)
         QtCore.QObject.connect(self.ui.doubleSpinBox, QtCore.SIGNAL("valueChanged(const QString&)"), self.update_spontaneous2)
 
@@ -54,6 +62,7 @@ class SpikeRatesPopup(QtGui.QMainWindow):
 
         title_test = QtGui.QLabel('Test')
         title_chan = QtGui.QLabel('Channel')
+        title_thresh = QtGui.QLabel('Threshold')
 
         font = QtGui.QFont()
         font.setPointSize(10)
@@ -61,14 +70,17 @@ class SpikeRatesPopup(QtGui.QMainWindow):
 
         title_test.setFont(font)
         title_chan.setFont(font)
+        title_thresh.setFont(font)
 
         layout.addWidget(title_test, 0, 0)
         layout.addWidget(title_chan, 0, 1)
+        layout.addWidget(title_thresh, 0, 2)
 
         row_count = 1
         for test in sorted_tests:
             checkbox = QtGui.QCheckBox(test[0])
             combobox = QtGui.QComboBox()
+            spnbox = QtGui.QDoubleSpinBox()
 
             layout.addWidget(checkbox, row_count, 0)
             self.checkboxes.append(checkbox)
@@ -97,11 +109,116 @@ class SpikeRatesPopup(QtGui.QMainWindow):
             layout.addWidget(combobox, row_count, 1)
             self.comboboxes.append(combobox)
 
+            spnbox.setSuffix(' V')
+            spnbox.setDecimals(4)
+            spnbox.setSingleStep(0.0001)
+            spnbox.setMinimum(-100)
+            spnbox.setMaximum(100)
+            # spnbox.setValue(thresh)
+
+            # TODO Enable when implemented
+            spnbox.setEnabled(False)
+
+            layout.addWidget(spnbox, row_count, 2)
+            self.spnboxes.append(spnbox)
+
             row_count += 1
 
         self.ui.scrollAreaWidgetContents.setLayout(layout)
 
+        # Add values to QSlider
+        window_time = h_file[target_seg][target_test].value.shape[-1] / h_file[target_seg].attrs['samplerate_ad']
+        self.ui.horizontalSlider.setMaximum(window_time * 1000)
+        self.ui.horizontalSlider.setValue(window_time * 500)
+
         h_file.close()
+
+    def estimate_thresholds(self):
+        thresh_fraction = 0.7
+
+        h_file = h5py.File(unicode(self.filename), 'r')
+
+        for row in range(len(self.checkboxes)):
+
+            for segment in h_file.keys():
+                for test in h_file[segment].keys():
+                    if self.checkboxes[row].text() == test:
+                        target_seg = segment
+                        target_test = test
+
+            trace_data = h_file[target_seg][target_test].value
+
+            if len(trace_data.shape) == 4:
+                trace_data = trace_data.squeeze()
+
+            # Still shape of 4
+            if len(trace_data.shape) == 4:
+
+                tchan = int(self.comboboxes[row].currentText().replace('channel_', '')) - 1
+
+                trace_data = trace_data[:, :, tchan, :]
+                trace_data = trace_data.squeeze()
+
+            # Compute threshold from average maximum of traces
+            max_trace = []
+            for n in range(len(trace_data[1, :, 0])):
+                max_trace.append(np.max(np.abs(trace_data[1, n, :])))
+            average_max = np.array(max_trace).mean()
+            thresh = thresh_fraction * average_max
+
+            self.spnboxes[row].setValue(thresh)
+
+    def get_spike_trains(self, h_file, test_num, spontStim=1):
+
+        for segment in h_file.keys():
+                for test in h_file[segment].keys():
+                    if self.checkboxes[test_num].text() == test:
+                        target_seg = segment
+                        target_test = test
+
+        fs = h_file[target_seg].attrs['samplerate_ad']
+        reps = h_file[target_seg][target_test].attrs['reps']
+
+        startTime = h_file[target_seg][target_test].attrs['start']
+        trace_data = h_file[target_seg][target_test].value
+
+        if len(trace_data) == 4:
+            trace_data = trace_data.squeeze()
+        # Still shape of 4
+        if len(trace_data.shape) == 4:
+            tchan = int(self.comboboxes[test_num].currentText().replace('channel_', '')) - 1
+            trace_data = trace_data[:, :, tchan, :]
+            trace_data = trace_data.squeeze()
+
+        thresh = self.spnboxes[test_num].value()
+
+        # ----- AutoThreshold -----
+        maxTrace = []
+        for n in range(len(trace_data[0, :, 0])):
+            maxTrace.append(np.max(np.abs(trace_data[spontStim, n, :])))
+        aveMax = np.array(maxTrace).mean()
+        #         if max(maxTrace) > 1 * np.std(maxTrace):  # remove an extreme outlyer caused by an electrical glitch
+        #             maxTrace.remove(max(maxTrace))
+        th = 0.7 * aveMax
+        thresh = th
+
+        spikeTrains = pd.DataFrame([])
+        nspk = 0
+
+        for n in range(len(trace_data[0, :, 0])):
+            spikes = spikestats.spike_times(trace_data[spontStim, n, :], threshold=thresh, fs=fs)
+            spikeTimes = 1000 * np.array(spikes)
+            spikeTimesS = pd.Series(spikeTimes)
+            if spikeTimesS.size > nspk:
+                spikeTrains = spikeTrains.reindex(spikeTimesS.index)
+                nspk = spikeTimesS.size
+            spikeTrains[str(n)] = spikeTimesS
+
+        # print 'thresh:', thresh, '\nspikes\n', spikes
+
+        duration = trace_data.shape[-1] / fs
+
+        return spikeTrains, duration, startTime
 
     def graph_spike_rates(self):
         print 'Spike Rates'
@@ -127,91 +244,44 @@ class SpikeRatesPopup(QtGui.QMainWindow):
                         target_seg = segment
                         target_test = test
 
-            fs = h_file[target_seg].attrs['samplerate_ad']
-            reps = h_file[target_seg][target_test].attrs['reps']
-            start_time = h_file[target_seg][target_test].attrs['start']
-            trace_data = h_file[target_seg][target_test].value
-
             stim_info = eval(h_file[target_seg][target_test].attrs['stim'])
+            start_time = h_file[target_seg][target_test].attrs['start']
 
-            # Test Threshold
-            trace_data = h_file[target_seg][target_test].value
-            if len(trace_data.shape) == 4:
-                trace_data = trace_data.squeeze()
-            # Still shape of 4
-            if len(trace_data.shape) == 4:
-                tchan = int(self.comboboxes[row].currentText().replace('channel_', '')) - 1
-                trace_data = trace_data[:, :, tchan, :]
-                trace_data = trace_data.squeeze()
-            # Compute threshold from average maximum of traces
-            max_trace = []
-            for n in range(len(trace_data[1, :, 0])):
-                max_trace.append(np.max(np.abs(trace_data[1, n, :])))
-            average_max = np.array(max_trace).mean()
-            thresh = 0.7 * average_max
-
-            autoRasters = {}
-            for tStim in range(1, len(stim_info)):
-                spl = int(stim_info[tStim]['components'][0]['intensity'])
-                traceKey = 'None_' + str(spl).zfill(2)
-                spikeTrains = pd.DataFrame([])
-                nspk = 0
-                # print 'type:', stim_info[tStim]['components'][0]['stim_type']
-                # print 'start:', stim_info[tStim]['components'][0]['start_s']
-                # print 'duration:', stim_info[tStim]['components'][0]['duration']
-                for tRep in range(reps):
-
-                    if len(trace_data.shape) == 3:
-                        trace = trace_data[tStim][tRep]
-                        pass
-                    elif len(trace_data.shape) == 4:
-                        tchan = int(self.comboboxes[row].currentText().replace('channel_', '')) - 1
-                        trace = trace_data[tStim][tRep][tchan]
-                        pass
-                    else:
-                        self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
-                        return
-
-                    spike_times = 1000 * np.array(get_spike_times(trace, thresh, fs))
-                    spike_times_s = pd.Series(spike_times)
-
-                    if spike_times_s.size >= nspk:
-                        spikeTrains = spikeTrains.reindex(spike_times_s.index)
-                        nspk = spike_times_s.size
-                    spikeTrains[str(tRep)] = spike_times_s
-                autoRasters[traceKey] = spikeTrains
-            rasters = autoRasters
-            duration = trace_data.shape[-1] / fs
+            spikeTrains, dur, time = self.get_spike_trains(h_file, row, spontStim=0)
+            print '\n----------\n1 SPIKETRAINS:', row, '\n', spikeTrains, '\n----------'
 
             # --- SpontaneousStats ---
             spontSpikeCount = []
-            for k in rasters.keys():
-                spk = rasters[k]
-                spontSpikeCount.append(len(spk.dropna()) / float(duration))
+            for k in spikeTrains.keys():
+                spk = spikeTrains[k]
+                spontSpikeCount.append(len(spk.dropna()) / float(dur))
                 if len(spontSpikeCount) > 0:
                     spontStats = [np.mean(spontSpikeCount), np.std(spontSpikeCount)]
                 else:
                     spontStats = [0, 0]
 
+            spikeTrains, dur, time = self.get_spike_trains(h_file, row, spontStim=1)
+            print '\n----------\n2 SPIKETRAINS:', row, '\n', spikeTrains, '\n----------'
+
             # Assumes all stim are the same for the test
-            print 'start:', stim_info[1]['components'][0]['start_s']
-            print 'duration:', stim_info[1]['components'][0]['duration']
+            # print 'stim start:', stim_info[1]['components'][0]['start_s']
+            # print 'stim duration:', stim_info[1]['components'][0]['duration']
             stimStart = stim_info[1]['components'][0]['start_s']
             stimDuration = stim_info[1]['components'][0]['duration']
 
             # --- ResponseStats ---
-            dur = 0.001 * stimDuration
+            dur = stimDuration
             responseSpikeCount = []
 
             for k in spikeTrains.keys():
                 spk = spikeTrains[k]
-                responseSpikeCount.append(len(spk[spk < stimStart + stimDuration + 10]) / dur)
+                responseSpikeCount.append(len(spk[spk < stimStart*1000 + stimDuration*1000 + 10]) / dur)
                 if len(responseSpikeCount) > 0:
                     responseStats = [np.mean(responseSpikeCount), np.std(responseSpikeCount)]
                 else:
                     responseStats = [0, 0]
 
-
+            timeStamp.append(time)
             spontAve.append(spontStats[0])
             spontSTD.append(spontStats[1])
             responseAve.append(responseStats[0])
@@ -219,7 +289,46 @@ class SpikeRatesPopup(QtGui.QMainWindow):
 
         # --- Plot the time dependent change in rates ---
         if target_rows:
-            print target_rows
+            # print 'target_rows:', target_rows
+            # print self.ui.timeEdit_on_time.date(), self.ui.timeEdit_on_time.time()
+            # print self.ui.timeEdit_off_time.date(), self.ui.timeEdit_off_time.time()
+            timeOn = str(self.ui.timeEdit_on_time.time().hour()) + ':' \
+                     + str(self.ui.timeEdit_on_time.time().minute()) + ':' \
+                     + str(self.ui.timeEdit_on_time.time().second())
+            timeOff = str(self.ui.timeEdit_off_time.time().hour()) + ':' \
+                      + str(self.ui.timeEdit_off_time.time().minute()) \
+                      + ':' + str(self.ui.timeEdit_off_time.time().second())
+            rateEffects = pd.DataFrame({'Spontaneous': spontAve, 'spontSTD': spontSTD, 'Response': responseAve,
+                                        'responseSTD': responseSTD}, index=pd.to_datetime(timeStamp))
+
+        if len(target_rows) > 1:
+            fig = plt.figure()
+            rateEffects['Response'].plot(yerr=rateEffects['responseSTD'], capthick=1)
+            rateEffects['Spontaneous'].plot(yerr=rateEffects['spontSTD'], capthick=1)
+            plt.legend(loc='upper right', fontsize=12, frameon=True)
+            sns.despine()
+            plt.grid(False)
+            plt.xlabel('Time (ms)', size=14)
+            plt.ylabel('Rate (Hz)', size=14)
+            plt.title(str.split(str(self.filename), '/')[-1].replace('.hdf5', ''), size=14)
+            plt.tick_params(axis='both', which='major', labelsize=14)
+            ax = plt.gca()
+            lineY = ax.get_ylim()[1] - 0.01 * ax.get_ylim()[1]
+            if timeOff == timeOn: timeOff = rateEffects.index[-1]
+            if timeOn != 0 and (isinstance(timeOn, str) and isinstance(timeOff, str)):
+                plt.plot((timeOn, timeOff), (lineY, lineY), 'k-', linewidth=4)
+            for i, n in enumerate(target_rows):
+                plt.annotate(str(n), (rateEffects.index[i], rateEffects['Spontaneous'][i]))
+
+            plt.show()
+            h_file.close()
+
+            print rateEffects
+
+        elif len(target_rows) > 0:
+            return rateEffects
+        else:
+            return []
 
     def get_pharma_times(self, data):
         pass
@@ -463,7 +572,7 @@ class MyForm(QtGui.QMainWindow):
         self.ui.textEdit.setReadOnly(True)
 
         # TODO Complete Spike Rates
-        self.ui.pushButton_spike_rates.setEnabled(False)
+        # self.ui.pushButton_spike_rates.setEnabled(False)
 
         QtCore.QObject.connect(self.ui.pushButton_raster, QtCore.SIGNAL("clicked()"), self.graph_raster)
         QtCore.QObject.connect(self.ui.pushButton_historgram, QtCore.SIGNAL("clicked()"), self.graph_historgram)
@@ -1096,6 +1205,8 @@ class MyForm(QtGui.QMainWindow):
 
         title = str.split(str(filename), '/')[-1].replace('.hdf5', '') + '_' \
                     + str(self.ui.comboBox_test_num.currentText())
+
+        # plt.savefig('output' + os.sep + 'tuning_curves' + os.sep + title + '_tuning_curve_1.png')
 
         check_output_folders()
 

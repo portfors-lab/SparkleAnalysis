@@ -61,6 +61,12 @@
     </item>
     <item row="9" column="0">
      <widget class="QSlider" name="horizontalSlider">
+      <property name="maximum">
+       <number>100000</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
       <property name="sliderPosition">
        <number>50</number>
       </property>
@@ -138,7 +144,7 @@
     </item>
     <item row="11" column="0">
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="1">
+      <item row="0" column="2">
        <widget class="QPushButton" name="pushButton_spike_rates">
         <property name="text">
          <string>Plot</string>
@@ -158,6 +164,13 @@
         </property>
        </spacer>
       </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="pushButton_auto_threshold">
+        <property name="text">
+         <string>Estimate Thresholds</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item row="10" column="0">
@@ -176,7 +189,20 @@
        </spacer>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
+       <widget class="QDoubleSpinBox" name="doubleSpinBox">
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="suffix">
+         <string> ms</string>
+        </property>
+        <property name="decimals">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <double>100000.000000000000000</double>
+        </property>
+       </widget>
       </item>
       <item>
        <spacer name="horizontalSpacer_5">
@@ -227,7 +253,14 @@
     <item row="7" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_4">
       <item>
-       <widget class="QTimeEdit" name="timeEdit_2"/>
+       <widget class="QTimeEdit" name="timeEdit_on_time">
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="displayFormat">
+         <string>h:mm</string>
+        </property>
+       </widget>
       </item>
       <item>
        <spacer name="horizontalSpacer_7">
@@ -243,7 +276,14 @@
        </spacer>
       </item>
       <item>
-       <widget class="QTimeEdit" name="timeEdit"/>
+       <widget class="QTimeEdit" name="timeEdit_off_time">
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+        <property name="displayFormat">
+         <string>h:mm</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>

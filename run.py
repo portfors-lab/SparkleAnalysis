@@ -579,6 +579,7 @@ class MyForm(QtGui.QMainWindow):
         # QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_io_test)
         QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_multi_io_test)
         QtCore.QObject.connect(self.ui.pushButton_spike_rates, QtCore.SIGNAL("clicked()"), self.graph_spike_rates)
+        QtCore.QObject.connect(self.ui.pushButton_abr, QtCore.SIGNAL("clicked()"), self.graph_abr)
 
         QtCore.QObject.connect(self.ui.pushButton_browse, QtCore.SIGNAL("clicked()"), self.browse)
         QtCore.QObject.connect(self.ui.pushButton_auto_threshold, QtCore.SIGNAL("clicked()"), self.auto_threshold)
@@ -1457,6 +1458,105 @@ class MyForm(QtGui.QMainWindow):
         histogram_f.show()
 
         return axHist
+
+    def graph_abr(self):
+        # Assumes there will only be one channel
+
+        print 'Graphing ABR'
+        filename = self.filename = self.ui.lineEdit_file_name.text()
+
+        # Validate filename
+        if not self.valid_filename(filename):
+            return
+
+        # clear view
+        self.clear_view()
+
+        target_test = self.ui.comboBox_test_num.currentText()
+
+        h_file = h5py.File(unicode(filename), 'r')
+
+        # Find target segment
+        for segment in h_file.keys():
+            for test in h_file[segment].keys():
+                if target_test == test:
+                    target_seg = segment
+                    target_test = test
+
+        # Makes the assumption that all of the traces are of the same type
+        stim_info = eval(h_file[target_seg][target_test].attrs['stim'])
+        self.ui.label_stim_type.setText(stim_info[1]['components'][0]['stim_type'])
+
+        fs = h_file[target_seg].attrs['samplerate_ad']
+
+        trace_data = h_file[target_seg][target_test].value
+
+        if len(trace_data.shape) == 4:
+            pass
+
+        samples = trace_data.shape[-1]
+        traces = trace_data.shape[0]
+        reps = trace_data.shape[1]
+
+        average = np.empty(samples)
+        abr = np.empty(shape=(traces, 1, 1, samples))
+
+        # Average the rep data into one trace
+        if len(trace_data.shape) == 4:
+            for t in range(traces):
+                for s in range(samples):
+                    # print s
+                    for r in range(reps):
+                        # print r
+                        average[s] += trace_data[0, r, 0, s]
+                    average[s] /= reps + 1
+                    abr[t, 0, 0, s] = average[s]
+        elif len(trace_data.shape) == 3:
+            for t in range(traces):
+                for s in range(samples):
+                    # print s
+                    for r in range(reps):
+                        # print r
+                        average[s] += trace_data[0, r, s]
+                    average[s] /= reps + 1
+                    abr[t, 0, 0, s] = average[s]
+        else:
+            self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
+            return
+
+        self.ui.view.tracePlot.clear()
+
+        # Get the presentation data depending on if there is a channel field or not
+        if len(abr.shape) == 4:
+            presentation = abr[[], [], [], :]
+        elif len(abr.shape) == 3:
+            presentation = abr[[], [], :]
+
+        len_presentation = len(presentation)
+
+        # Get the length of the window and length of presentation depending on if all is selected or not
+        if len_presentation != 0:
+            window = len(presentation) / float(fs)
+        else:
+            if len(abr.shape) == 4:
+                window = len(abr[0, 0, 0, :]) / float(fs)
+                len_presentation = len(abr[0, 0, 0, :])
+            elif len(abr.shape) == 3:
+                window = len(abr[0, 0, :]) / float(fs)
+                len_presentation = len(abr[0, 0, :])
+
+        xlist = np.linspace(0, float(window), len_presentation)
+        ylist = presentation
+
+        # Fix xlist to be the length of presentation
+        if len(abr.shape) == 3:
+            self.ui.view.addTraces(xlist, abr[:, 0, :])
+        else:
+            self.ui.view.addTraces(xlist, abr[:, 0, 0, :])
+
+        self.ui.radioButton_normal.setChecked(True)
+        self.ui.radioButton_normal.setEnabled(False)
+        self.ui.radioButton_inverse.setEnabled(False)
 
     def GetFreqsAttns(self, freqTuningHisto):  # Frequency Tuning Curve method
         """ Helper method for ShowSTH() to organize the frequencies in ascending order separated for each intensity.

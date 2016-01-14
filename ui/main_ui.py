@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:/Users/Joel/Documents/AnalysisGui/main.ui'
+# Form implementation generated from reading ui file 'c:/Users/Joel/Documents/AnalysisGui/ui/main.ui'
 #
-# Created: Mon Dec 14 17:58:05 2015
+# Created: Tue Jan 12 13:53:03 2016
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -351,6 +351,9 @@ class Ui_MainWindow(object):
         self.pushButton_spike_rates = QtGui.QPushButton(self.centralwidget)
         self.pushButton_spike_rates.setObjectName(_fromUtf8("pushButton_spike_rates"))
         self.gridLayout_3.addWidget(self.pushButton_spike_rates, 5, 0, 1, 1)
+        self.pushButton_abr = QtGui.QPushButton(self.centralwidget)
+        self.pushButton_abr.setObjectName(_fromUtf8("pushButton_abr"))
+        self.gridLayout_3.addWidget(self.pushButton_abr, 6, 0, 1, 1)
         self.horizontalLayout_2.addLayout(self.gridLayout_3)
         self.gridLayout.addLayout(self.horizontalLayout_2, 2, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -412,5 +415,7 @@ class Ui_MainWindow(object):
         self.pushButton_io_test.setText(_translate("MainWindow", "I/O Test", None))
         self.pushButton_spike_rates.setToolTip(_translate("MainWindow", "Opens a window for creating spike rate plots.", None))
         self.pushButton_spike_rates.setText(_translate("MainWindow", "Spike Rates", None))
+        self.pushButton_abr.setToolTip(_translate("MainWindow", "Creates an auditory brainstem response (ABR) graph based on your current test.", None))
+        self.pushButton_abr.setText(_translate("MainWindow", "ABR", None))
 
 from pyqtgraph_widgets import TraceWidget

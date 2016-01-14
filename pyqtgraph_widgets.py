@@ -110,7 +110,7 @@ class TraceWidget(BasePlot):
         self.threshLine = pg.InfiniteLine(pos=0.5, angle=0, pen='r', movable=True)
         self.addItem(self.threshLine)
         self.threshLine.sigPositionChangeFinished.connect(self.update_thresh)
-        self.setLabel('left', 'Potential', units='V')
+        self.setLabel('left', '', units='V')
         self.setLabel('bottom', 'Time', units='s')
 
         self.hideButtons()  # hides the 'A' Auto-scale button

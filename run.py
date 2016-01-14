@@ -1701,6 +1701,6 @@ def get_spike_times(signal, threshold, fs):
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     myApp = MyForm()
-    myApp.setWindowIcon(QtGui.QIcon('horsey.png'))
+    myApp.setWindowIcon(QtGui.QIcon('images/horsey.png'))
     myApp.show()
     sys.exit(app.exec_())

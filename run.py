@@ -1501,6 +1501,8 @@ class MyForm(QtGui.QMainWindow):
         average = np.empty(samples)
         abr = np.empty(shape=(traces, 1, 1, samples))
 
+        intensity = []
+
         # Average the rep data into one trace
         if len(trace_data.shape) == 4:
             for t in range(traces):
@@ -1511,6 +1513,7 @@ class MyForm(QtGui.QMainWindow):
                         average[s] += trace_data[0, r, 0, s]
                     average[s] /= reps + 1
                     abr[t, 0, 0, s] = average[s]
+                intensity.append(stim_info[t]['components'][0]['intensity'])
         elif len(trace_data.shape) == 3:
             for t in range(traces):
                 for s in range(samples):
@@ -1520,6 +1523,7 @@ class MyForm(QtGui.QMainWindow):
                         average[s] += trace_data[0, r, s]
                     average[s] /= reps + 1
                     abr[t, 0, 0, s] = average[s]
+                intensity.append(stim_info[t]['components'][0]['intensity'])
         else:
             self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
             return
@@ -1550,9 +1554,9 @@ class MyForm(QtGui.QMainWindow):
 
         # Fix xlist to be the length of presentation
         if len(abr.shape) == 3:
-            self.ui.view.addTraces(xlist, abr[:, 0, :])
+            self.ui.view.addTracesABR(xlist, abr[:, 0, :], intensity)
         else:
-            self.ui.view.addTraces(xlist, abr[:, 0, 0, :])
+            self.ui.view.addTracesABR(xlist, abr[:, 0, 0, :], intensity)
 
         self.ui.radioButton_normal.setChecked(True)
         self.ui.radioButton_normal.setEnabled(False)

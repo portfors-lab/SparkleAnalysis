@@ -97,6 +97,8 @@ class TraceWidget(BasePlot):
     def __init__(self, parent=None):
         super(TraceWidget, self).__init__(parent)
 
+        self.legend = self.addLegend()
+
         self.tracePlot = self.plot(pen='k')
         self.rasterPlot = self.plot(pen=None, symbol='s', symbolPen=None, symbolSize=4, symbolBrush='k')
         self.stimPlot = self.plot(pen='b')
@@ -116,6 +118,7 @@ class TraceWidget(BasePlot):
         self.hideButtons()  # hides the 'A' Auto-scale button
         self.updateRasterBounds()
         self.trace_stash = []
+        self.legend_names = []
 
     def updateData(self, axeskey, x, y):
         """Replaces the currently displayed data
@@ -148,9 +151,20 @@ class TraceWidget(BasePlot):
         for irep in range(nreps):
             self.trace_stash.append(self.plot(x, ys[irep, :], pen=(irep, nreps)))
 
+    def addTracesABR(self, x, ys, intensity):
+        self.clearTraces()
+        nreps = ys.shape[0]
+        for irep in range(nreps):
+            self.trace_stash.append(self.plot(x, ys[irep, :], pen=(irep, nreps)))
+            line = self.plot(pen=pg.intColor(irep, hues=nreps))
+            self.legend.addItem(line, 'trace_' + str(irep+1) + ': ' + str(intensity[irep]) + ' dB')
+            self.legend_names.append('trace_' + str(irep+1) + ': ' + str(intensity[irep]) + ' dB')
+
     def clearTraces(self):
         for trace in self.trace_stash:
             self.removeItem(trace)
+        for name in self.legend_names:
+            self.legend.removeItem(name)
 
     def appendData(self, axeskey, bins, ypoints):
         """Appends data to existing plotted data

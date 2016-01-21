@@ -13,7 +13,11 @@ import matplotlib.pyplot as plt
 
 import matplotlib
 
+from operator import attrgetter
+from collections import namedtuple
+
 from PyQt4 import QtCore, QtGui
+from ui.abr_ui import Ui_Form_abr
 from ui.main_ui import Ui_MainWindow
 from ui.multi_io_ui import Ui_Form_multi_io
 from ui.spike_rates_ui import Ui_Form_spike_rates
@@ -555,6 +559,377 @@ class MultiIOPopup(QtGui.QMainWindow):
         h_file.close()
 
 
+class ABRPopup(QtGui.QMainWindow):
+    def __init__(self, parent=None):
+        QtGui.QWidget.__init__(self, parent)
+        self.ui = Ui_Form_abr()
+        self.ui.setupUi(self)
+
+        self.filename = ''
+
+        QtCore.QObject.connect(self.ui.pushButton_abr, QtCore.SIGNAL("clicked()"), self.graph_abr)
+
+        QtCore.QObject.connect(self.ui.comboBox_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.populate_comments)
+        QtCore.QObject.connect(self.ui.comboBox_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.populate_frequency)
+        QtCore.QObject.connect(self.ui.comboBox_frequency, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.graph_abr)
+
+    def populate_boxes(self, filename):
+        self.filename = filename
+
+        self.ui.label_title.setText(str.split(str(filename), '/')[-1])
+        h_file = h5py.File(unicode(filename), 'r')
+
+        self.ui.comboBox_test_num.clear()
+
+        # If the filename is not blank, attempt to extract test numbers and place them into the combobox
+        if self.filename != '':
+            if '.hdf5' in self.filename:
+                try:
+                    h_file = h5py.File(unicode(self.filename), 'r')
+                except IOError:
+                    self.add_message('Error: I/O Error')
+                    self.ui.label_test_num.setEnabled(False)
+                    self.ui.label_comments.setEnabled(False)
+                    self.ui.lineEdit_comments.setEnabled(False)
+                    self.ui.lineEdit_comments.setText('')
+                    self.ui.comboBox_test_num.setEnabled(False)
+                    return
+
+                tests = {}
+                for key in h_file.keys():
+                    if 'segment' in key:
+                        for test in h_file[key].keys():
+                            tests[test] = int(test.replace('test_', ''))
+
+                sorted_tests = sorted(tests.items(), key=operator.itemgetter(1))
+
+                for test in sorted_tests:
+                    self.ui.comboBox_test_num.addItem(test[0])
+
+                self.ui.label_test_num.setEnabled(True)
+                self.ui.label_comments.setEnabled(True)
+                self.ui.lineEdit_comments.setEnabled(True)
+                self.ui.comboBox_test_num.setEnabled(True)
+
+                h_file.close()
+
+    def populate_frequency(self):
+        # Validate filename
+        if self.valid_filename(self.filename):
+            h_file = h5py.File(unicode(self.filename), 'r')
+            target_test = self.ui.comboBox_test_num.currentText()
+        else:
+            return
+
+        # Find target segment
+        for segment in h_file.keys():
+            for test in h_file[segment].keys():
+                if target_test == test:
+                    target_seg = segment
+                    target_test = test
+
+        self.ui.comboBox_frequency.clear()
+
+        # Makes the assumption that all of the traces are of the same type
+        stim_info = eval(h_file[target_seg][target_test].attrs['stim'])
+
+        trace_data = h_file[target_seg][target_test].value
+
+        samples = trace_data.shape[-1]
+        traces = trace_data.shape[0]
+        reps = trace_data.shape[1]
+
+        average = np.empty(samples)
+        abr = np.empty(shape=(traces, 1, 1, samples))
+
+        intensity = []
+        frequency = []
+
+        # Average the rep data into one trace
+        if len(trace_data.shape) == 4:
+            for t in range(traces):
+                for s in range(samples):
+                    # print s
+                    for r in range(reps):
+                        # print r
+                        average[s] += trace_data[t, r, 0, s]
+                    average[s] /= reps + 1
+                    abr[t, 0, 0, s] = average[s]
+                intensity.append(stim_info[t]['components'][0]['intensity'])
+                if t != 0:
+                    frequency.append(stim_info[t]['components'][0]['frequency'])
+        elif len(trace_data.shape) == 3:
+            for t in range(traces):
+                for s in range(samples):
+                    # print s
+                    for r in range(reps):
+                        # print r
+                        average[s] += trace_data[t, r, s]
+                    average[s] /= reps + 1
+                    abr[t, 0, 0, s] = average[s]
+                intensity.append(stim_info[t]['components'][0]['intensity'])
+                if t != 0:
+                    frequency.append(stim_info[t]['components'][0]['frequency'])
+        else:
+            self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
+            return
+
+        # Remove duplicates
+        unique = []
+        dup = set()
+        for freq in frequency:
+            if freq not in dup:
+                unique.append(freq)
+                dup.add(freq)
+
+        for freq in unique:
+            self.ui.comboBox_frequency.addItem(str(freq))
+
+        if self.ui.comboBox_frequency.size() > 0:
+            self.ui.comboBox_frequency.setEnabled(True)
+            self.ui.label_frequency.setEnabled(True)
+        else:
+            self.ui.comboBox_frequency.setEnabled(False)
+            self.ui.label_frequency.setEnabled(False)
+
+    def populate_comments(self):
+        # Validate filename
+        if self.valid_filename(self.filename):
+            h_file = h5py.File(unicode(self.filename), 'r')
+            target_test = self.ui.comboBox_test_num.currentText()
+        else:
+            return
+
+        # Find target segment
+        for segment in h_file.keys():
+            for test in h_file[segment].keys():
+                if target_test == test:
+                    target_seg = segment
+                    target_test = test
+
+        comment = h_file[target_seg].attrs['comment']
+        self.ui.lineEdit_comments.setText(comment)
+
+        # Set Frequency Field disabled
+        self.ui.label_frequency.setEnabled(False)
+        self.ui.comboBox_frequency.setEnabled(False)
+
+    def graph_abr(self):
+        # Assumes there will only be one channel
+
+        print 'Graphing ABR'
+        filename = self.filename
+
+        # Validate filename
+        if not self.valid_filename(filename):
+            return
+
+        # clear view
+        self.clear_view()
+
+        target_test = self.ui.comboBox_test_num.currentText()
+
+        h_file = h5py.File(unicode(filename), 'r')
+
+        # Find target segment
+        for segment in h_file.keys():
+            for test in h_file[segment].keys():
+                if target_test == test:
+                    target_seg = segment
+                    target_test = test
+
+        # Makes the assumption that all of the traces are of the same type
+        stim_info = eval(h_file[target_seg][target_test].attrs['stim'])
+
+        fs = h_file[target_seg].attrs['samplerate_ad']
+
+        trace_data = h_file[target_seg][target_test].value
+
+        if len(trace_data.shape) == 4:
+            pass
+
+        # TODO
+        print trace_data.shape
+        print trace_data
+        samples = trace_data.shape[-1]
+        traces = trace_data.shape[0]
+        reps = trace_data.shape[1]
+
+        average = np.empty(samples)
+        temp = np.empty(shape=(traces, 1, 1, samples))
+
+        intensity = []
+        frequency = []
+
+        # Average the rep data into one trace
+        if len(trace_data.shape) == 4:
+            for t in range(traces):
+                for s in range(samples):
+                    # print s
+                    for r in range(reps):
+                        # print r
+                        average[s] += trace_data[t, r, 0, s]
+                    average[s] /= reps + 1
+                    temp[t, 0, 0, s] = average[s]
+                intensity.append(stim_info[t]['components'][0]['intensity'])
+                if t != 0:
+                    frequency.append(stim_info[t]['components'][0]['frequency'])
+                else:
+                    frequency.append(0)
+        elif len(trace_data.shape) == 3:
+            for t in range(traces):
+                for s in range(samples):
+                    # print s
+                    for r in range(reps):
+                        # print r
+                        average[s] += trace_data[t, r, s]
+                    average[s] /= reps + 1
+                    temp[t, 0, 0, s] = average[s]
+                intensity.append(stim_info[t]['components'][0]['intensity'])
+                if t != 0:
+                    frequency.append(stim_info[t]['components'][0]['frequency'])
+                else:
+                    frequency.append(0)
+        else:
+            self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
+            return
+
+        print 'intensity', len(intensity)
+        print 'frequency', len(frequency)
+
+        freq = []
+        inten = []
+        trace_num = []
+
+        count = 0
+
+        # Find the number of traces with x frequency
+        for t in range(traces):
+            if float(self.ui.comboBox_frequency.currentText()) == frequency[t]:
+                count += 1
+
+        abr = np.empty(shape=(count, 1, 1, samples))
+        count = 0
+
+        # Select only the desired frequency
+        for t in range(traces):
+            print 'int: ' + str(intensity[t]) + ' freq: ' + str(frequency[t])
+
+            if float(self.ui.comboBox_frequency.currentText()) == frequency[t]:
+                freq.append(frequency[t])
+                inten.append(intensity[t])
+                trace_num.append(t)
+                abr[count, 0, 0, :] = temp[t, 0, 0, :]
+                count += 1
+
+        print 'Select:'
+        for i in range(len(freq)):
+            print 'int: ' + str(inten[i]) + ' freq: ' + str(freq[i])
+
+        abrtrace = namedtuple('abrtrace', 'samples trace_num frequency intensity')
+
+        abrtraces = []
+
+        for i in range(count):
+            abrtraces.append(abrtrace(abr[i, 0, 0, :], trace_num[i], freq[i], inten[i]))
+
+        abrtraces = sorted(abrtraces, key=attrgetter('intensity'))
+
+        for i in range(len(abrtraces)-1):
+            for s in range(samples):
+                if abrtraces[i].samples[s] > abrtraces[i+1].samples[s]:
+                    diff = abrtraces[i].samples[s] - abrtraces[i+1].samples[s]
+                    abrtraces[i+1] = abrtrace(abrtraces[i+1].samples + diff, abrtraces[i+1].trace_num, abrtraces[i+1].frequency, abrtraces[i+1].intensity)
+
+        for i in range(len(abrtraces)):
+            abr[i] = abrtraces[i].samples
+            inten[i] = abrtraces[i].intensity
+            trace_num[i] = abrtraces[i].trace_num
+
+        self.ui.view.tracePlot.clear()
+
+        # Get the presentation data depending on if there is a channel field or not
+        if len(abr.shape) == 4:
+            presentation = abr[[], [], [], :]
+        elif len(abr.shape) == 3:
+            presentation = abr[[], [], :]
+
+        len_presentation = len(presentation)
+
+        # Get the length of the window and length of presentation depending on if all is selected or not
+        if len_presentation != 0:
+            window = len(presentation) / float(fs)
+        else:
+            if len(abr.shape) == 4:
+                window = len(abr[0, 0, 0, :]) / float(fs)
+                len_presentation = len(abr[0, 0, 0, :])
+            elif len(abr.shape) == 3:
+                window = len(abr[0, 0, :]) / float(fs)
+                len_presentation = len(abr[0, 0, :])
+
+        xlist = np.linspace(0, float(window), len_presentation)
+        ylist = presentation
+
+        # Fix xlist to be the length of presentation
+        if len(abr.shape) == 3:
+            self.ui.view.addTracesABR(xlist, abr[:, 0, :], inten, trace_num)
+        else:
+            self.ui.view.addTracesABR(xlist, abr[:, 0, 0, :], inten, trace_num)
+
+        # Set window size
+        if not self.ui.checkBox_custom_window.checkState():
+            if len(presentation) > 0:
+                ymin = min(presentation)
+                ymax = max(presentation)
+            else:
+                ymin = 0
+                ymax = 0
+                if len(trace_data.shape) == 3:
+                    rep_len = trace_data.shape[1]
+                    for i in range(rep_len):
+                        if min(trace_data[0, i, :]) < ymin:
+                            ymin = min(trace_data[0, i, :])
+                        if max(trace_data[0, i, :]) > ymax:
+                            ymax = max(trace_data[0, i, :])
+                else:
+                    rep_len = trace_data.shape[1]
+                    for i in range(rep_len):
+                        if min(trace_data[0, i, 0, :]) < ymin:
+                            ymin = min(trace_data[0, i, 0, :])
+                        if max(trace_data[0, i, 0, :]) > ymax:
+                            ymax = max(trace_data[0, i, 0, :])
+
+            self.ui.view.setXRange(0, window, 0)
+            self.ui.view.setYRange(ymin, ymax, 0.1)
+
+    def valid_filename(self, filename):
+        # Validate filename
+        if filename != '':
+            if '.hdf5' in filename:
+                try:
+                    temp_file = h5py.File(unicode(self.filename), 'r')
+                    temp_file.close()
+                except IOError:
+                    return False
+            else:
+                return False
+        else:
+            return False
+
+        return True
+
+    def clear_view(self):
+        self.ui.view.clearTraces()
+        self.ui.view.clearMouse()
+        self.ui.view.clearFocus()
+        self.ui.view.clearMask()
+        self.ui.view.clearData(axeskey='response')
+        self.ui.view.tracePlot.clear()
+        self.ui.view.rasterPlot.clear()
+        self.ui.view.stimPlot.clear()
+        self.ui.view.trace_stash = []
+
+
 class MyForm(QtGui.QMainWindow):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
@@ -1056,7 +1431,7 @@ class MyForm(QtGui.QMainWindow):
             return
 
         self.dialog.populate_checkboxes(filename)
-        self.dialog.setWindowIcon(QtGui.QIcon('horsey.png'))
+        self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.png'))
         self.dialog.show()
 
     def graph_multi_io_test(self):
@@ -1069,7 +1444,20 @@ class MyForm(QtGui.QMainWindow):
             return
 
         self.dialog.populate_checkboxes(filename, self.ui.doubleSpinBox_threshold.value())
-        self.dialog.setWindowIcon(QtGui.QIcon('horsey.png'))
+        self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.png'))
+        self.dialog.show()
+
+    def graph_abr(self):
+        self.dialog = ABRPopup()
+
+        filename = self.filename = self.ui.lineEdit_file_name.text()
+
+        # Validate filename
+        if not self.valid_filename(filename):
+            return
+
+        self.dialog.populate_boxes(filename)
+        self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.png'))
         self.dialog.show()
 
     def graph_io_test(self):
@@ -1459,7 +1847,7 @@ class MyForm(QtGui.QMainWindow):
 
         return axHist
 
-    def graph_abr(self):
+    def graph_abr_old(self):
         # Assumes there will only be one channel
 
         print 'Graphing ABR'

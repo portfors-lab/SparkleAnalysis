@@ -151,14 +151,14 @@ class TraceWidget(BasePlot):
         for irep in range(nreps):
             self.trace_stash.append(self.plot(x, ys[irep, :], pen=(irep, nreps)))
 
-    def addTracesABR(self, x, ys, intensity):
+    def addTracesABR(self, x, ys, intensity, trace_num):
         self.clearTraces()
         nreps = ys.shape[0]
         for irep in range(nreps):
             self.trace_stash.append(self.plot(x, ys[irep, :], pen=(irep, nreps)))
             line = self.plot(pen=pg.intColor(irep, hues=nreps))
-            self.legend.addItem(line, 'trace_' + str(irep+1) + ': ' + str(intensity[irep]) + ' dB')
-            self.legend_names.append('trace_' + str(irep+1) + ': ' + str(intensity[irep]) + ' dB')
+            self.legend.addItem(line, 'trace_' + str(trace_num[irep]) + ': ' + str(intensity[irep]) + ' dB')
+            self.legend_names.append('trace_' + str(trace_num[irep]) + ': ' + str(intensity[irep]) + ' dB')
 
     def clearTraces(self):
         for trace in self.trace_stash:

@@ -154,7 +154,7 @@ class TraceWidget(BasePlot):
     def addTracesABR(self, x, ys, intensity, trace_num):
         self.clearTraces()
         nreps = ys.shape[0]
-        for irep in range(nreps):
+        for irep in reversed(range(nreps)):
             self.trace_stash.append(self.plot(x, ys[irep, :], pen=(irep, nreps)))
             line = self.plot(pen=pg.intColor(irep, hues=nreps))
             self.legend.addItem(line, 'trace_' + str(trace_num[irep]) + ': ' + str(intensity[irep]) + ' dB')

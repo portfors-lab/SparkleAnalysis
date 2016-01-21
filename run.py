@@ -1431,7 +1431,7 @@ class MyForm(QtGui.QMainWindow):
             return
 
         self.dialog.populate_checkboxes(filename)
-        self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.png'))
+        self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.ico'))
         self.dialog.show()
 
     def graph_multi_io_test(self):
@@ -1444,7 +1444,7 @@ class MyForm(QtGui.QMainWindow):
             return
 
         self.dialog.populate_checkboxes(filename, self.ui.doubleSpinBox_threshold.value())
-        self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.png'))
+        self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.ico'))
         self.dialog.show()
 
     def graph_abr(self):
@@ -1457,7 +1457,7 @@ class MyForm(QtGui.QMainWindow):
             return
 
         self.dialog.populate_boxes(filename)
-        self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.png'))
+        self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.ico'))
         self.dialog.show()
 
     def graph_io_test(self):
@@ -2093,6 +2093,6 @@ def get_spike_times(signal, threshold, fs):
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     myApp = MyForm()
-    myApp.setWindowIcon(QtGui.QIcon('images/horsey.png'))
+    myApp.setWindowIcon(QtGui.QIcon('images/horsey.ico'))
     myApp.show()
     sys.exit(app.exec_())

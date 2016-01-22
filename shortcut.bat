@@ -17,7 +17,7 @@ SET PATH=%PATH%;%gitLocation%
 title Sparkle Analysis
 
 :: Get versions of Sparkle Analysis
-git remote update
+git remote update 
 for /f "delims=" %%i in ('git rev-parse @{0}') do set local=%%i
 for /f "delims=" %%i in ('git rev-parse origin/master') do set remote=%%i
 for /f "delims=" %%i in ('git merge-base @ origin/master') do set base=%%i

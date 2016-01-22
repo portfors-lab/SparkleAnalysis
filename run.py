@@ -567,11 +567,11 @@ class ABRPopup(QtGui.QMainWindow):
 
         self.filename = ''
 
-        QtCore.QObject.connect(self.ui.pushButton_abr, QtCore.SIGNAL("clicked()"), self.graph_abr)
-
         QtCore.QObject.connect(self.ui.comboBox_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.populate_comments)
         QtCore.QObject.connect(self.ui.comboBox_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.populate_frequency)
         QtCore.QObject.connect(self.ui.comboBox_frequency, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.graph_abr)
+
+        QtCore.QObject.connect(self.ui.doubleSpinBox_min_sep, QtCore.SIGNAL("valueChanged(const QString&)"), self.graph_abr)
 
     def populate_boxes(self, filename):
         self.filename = filename
@@ -593,6 +593,8 @@ class ABRPopup(QtGui.QMainWindow):
                     self.ui.lineEdit_comments.setEnabled(False)
                     self.ui.lineEdit_comments.setText('')
                     self.ui.comboBox_test_num.setEnabled(False)
+                    self.ui.label_min_sep.setEnabled(False)
+                    self.ui.doubleSpinBox_min_sep.setEnabled(False)
                     return
 
                 tests = {}
@@ -688,9 +690,13 @@ class ABRPopup(QtGui.QMainWindow):
         if self.ui.comboBox_frequency.size() > 0:
             self.ui.comboBox_frequency.setEnabled(True)
             self.ui.label_frequency.setEnabled(True)
+            self.ui.label_min_sep.setEnabled(True)
+            self.ui.doubleSpinBox_min_sep.setEnabled(True)
         else:
             self.ui.comboBox_frequency.setEnabled(False)
             self.ui.label_frequency.setEnabled(False)
+            self.ui.label_min_sep.setEnabled(False)
+            self.ui.doubleSpinBox_min_sep.setEnabled(False)
 
     def populate_comments(self):
         # Validate filename
@@ -713,6 +719,8 @@ class ABRPopup(QtGui.QMainWindow):
         # Set Frequency Field disabled
         self.ui.label_frequency.setEnabled(False)
         self.ui.comboBox_frequency.setEnabled(False)
+        self.ui.label_min_sep.setEnabled(False)
+        self.ui.doubleSpinBox_min_sep.setEnabled(False)
 
     def graph_abr(self):
         # Assumes there will only be one channel
@@ -832,8 +840,8 @@ class ABRPopup(QtGui.QMainWindow):
 
         for i in range(len(abrtraces)-1):
             for s in range(samples):
-                if abrtraces[i].samples[s] > abrtraces[i+1].samples[s]:
-                    diff = abrtraces[i].samples[s] - abrtraces[i+1].samples[s]
+                if (abrtraces[i+1].samples[s] - abrtraces[i].samples[s]) < 0 + self.ui.doubleSpinBox_min_sep.value():
+                    diff = (abrtraces[i].samples[s] - abrtraces[i+1].samples[s]) + self.ui.doubleSpinBox_min_sep.value()
                     abrtraces[i+1] = abrtrace(abrtraces[i+1].samples + diff, abrtraces[i+1].trace_num, abrtraces[i+1].frequency, abrtraces[i+1].intensity)
 
         for i in range(len(abrtraces)):
@@ -879,20 +887,20 @@ class ABRPopup(QtGui.QMainWindow):
             else:
                 ymin = 0
                 ymax = 0
-                if len(trace_data.shape) == 3:
-                    rep_len = trace_data.shape[1]
+                if len(abr.shape) == 3:
+                    rep_len = abr.shape[1]
                     for i in range(rep_len):
-                        if min(trace_data[0, i, :]) < ymin:
-                            ymin = min(trace_data[0, i, :])
-                        if max(trace_data[0, i, :]) > ymax:
-                            ymax = max(trace_data[0, i, :])
+                        if min(abr[0, i, :]) < ymin:
+                            ymin = min(abr[0, i, :])
+                        if max(abr[0, i, :]) > ymax:
+                            ymax = max(abr[0, i, :])
                 else:
-                    rep_len = trace_data.shape[1]
-                    for i in range(rep_len):
-                        if min(trace_data[0, i, 0, :]) < ymin:
-                            ymin = min(trace_data[0, i, 0, :])
-                        if max(trace_data[0, i, 0, :]) > ymax:
-                            ymax = max(trace_data[0, i, 0, :])
+                    trace_len = abr.shape[0]
+                    for i in range(trace_len):
+                        if min(abr[i, 0, 0, :]) < ymin:
+                            ymin = min(abr[i, 0, 0, :])
+                        if max(abr[i, 0, 0, :]) > ymax:
+                            ymax = max(abr[i, 0, 0, :])
 
             self.ui.view.setXRange(0, window, 0)
             self.ui.view.setYRange(ymin, ymax, 0.1)

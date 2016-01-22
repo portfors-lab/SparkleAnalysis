@@ -9,10 +9,10 @@ cls
 :: Analysis, make a copy of this file and rename it
 :: something easy to remember (e.g. SparkleAnalysis.bat).
 :: Now in the copy of this file you will want to change the
-:: variable of "location" (line 15) with the path to the
+:: variable of "location" (line 24) with the path to the
 :: SparkleAnalysis directory (where you found this file).
 :: After you complete that you will want to change the
-:: variable for "gitLocation" (line 15) with the path to
+:: variable for "gitLocation" (line 28) with the path to
 :: where your git.exe is stored. Once you have those set,
 :: you can either create a shortcut to your newly edited
 :: file or just run the .bat file. While running it with

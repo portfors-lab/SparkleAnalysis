@@ -22,6 +22,8 @@ for /f "delims=" %%i in ('git rev-parse @{0}') do set local=%%i
 for /f "delims=" %%i in ('git rev-parse origin/master') do set remote=%%i
 for /f "delims=" %%i in ('git merge-base @ origin/master') do set base=%%i
 
+echo.
+
 :: Check relation of various versions
 if "%local%" equ "%remote%" (
     echo Sparkle Analysis is up to date.

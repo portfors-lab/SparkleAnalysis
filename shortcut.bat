@@ -2,7 +2,23 @@
 setlocal EnableExtensions EnableDelayedExpansion
 cls
 
-:: ------------------------------------------------
+:: --------------------------------------------------------
+::
+:: HOW TO USE:
+:: To use this .bat file for running and updating Sparkle
+:: Analysis, make a copy of this file and rename it
+:: something easy to remember (e.g. SparkleAnalysis.bat).
+:: Now in the copy of this file you will want to change the
+:: variable of "location" (line 15) with the path to the
+:: SparkleAnalysis directory (where you found this file).
+:: After you complete that you will want to change the
+:: variable for "gitLocation" (line 15) with the path to
+:: where your git.exe is stored. Once you have those set,
+:: you can either create a shortcut to your newly edited
+:: file or just run the .bat file. While running it with
+:: this code, it will check for updates before running
+:: and will ask the user if they wish to update if there
+:: are any new updates.
 ::
 :: Place your path to Sparkle Analysis here
 set location="C:\Users\Name\Documents\SparkleAnalysis\"
@@ -12,12 +28,12 @@ cd %location%
 set gitLocation="C:\Program Files (x86)\Git\bin"
 SET PATH=%PATH%;%gitLocation%
 ::
-:: ------------------------------------------------
+:: --------------------------------------------------------
 
 title Sparkle Analysis
 
 :: Get versions of Sparkle Analysis
-git remote update 
+git remote update
 for /f "delims=" %%i in ('git rev-parse @{0}') do set local=%%i
 for /f "delims=" %%i in ('git rev-parse origin/master') do set remote=%%i
 for /f "delims=" %%i in ('git merge-base @ origin/master') do set base=%%i

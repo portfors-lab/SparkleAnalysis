@@ -885,7 +885,7 @@ class ABRPopup(QtGui.QMainWindow):
                 ymin = min(presentation)
                 ymax = max(presentation)
             else:
-                ymin = 0
+                ymin = 100
                 ymax = 0
                 if len(abr.shape) == 3:
                     rep_len = abr.shape[1]

@@ -249,6 +249,9 @@
         </property>
         <item>
          <widget class="QCheckBox" name="checkBox_custom_window">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="font">
            <font>
             <pointsize>10</pointsize>

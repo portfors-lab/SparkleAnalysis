@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'c:/Users/Joel/Documents/AnalysisGui/ui/abr.ui'
 #
-# Created: Fri Jan 22 11:12:00 2016
+# Created: Fri Jan 22 12:06:50 2016
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -128,6 +128,7 @@ class Ui_Form_abr(object):
         self.verticalLayout_5.setContentsMargins(-1, -1, 10, -1)
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
         self.checkBox_custom_window = QtGui.QCheckBox(self.centralwidget)
+        self.checkBox_custom_window.setEnabled(False)
         font = QtGui.QFont()
         font.setPointSize(10)
         self.checkBox_custom_window.setFont(font)

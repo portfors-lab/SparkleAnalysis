@@ -252,7 +252,7 @@ class SpikeRatesPopup(QtGui.QMainWindow):
             start_time = h_file[target_seg][target_test].attrs['start']
 
             spikeTrains, dur, time = self.get_spike_trains(h_file, row, spontStim=0)
-            print '\n----------\n1 SPIKETRAINS:', row, '\n', spikeTrains, '\n----------'
+            # print '\n----------\n1 SPIKETRAINS:', row, '\n', spikeTrains, '\n----------'
 
             # --- SpontaneousStats ---
             spontSpikeCount = []
@@ -265,7 +265,7 @@ class SpikeRatesPopup(QtGui.QMainWindow):
                     spontStats = [0, 0]
 
             spikeTrains, dur, time = self.get_spike_trains(h_file, row, spontStim=1)
-            print '\n----------\n2 SPIKETRAINS:', row, '\n', spikeTrains, '\n----------'
+            # print '\n----------\n2 SPIKETRAINS:', row, '\n', spikeTrains, '\n----------'
 
             # Assumes all stim are the same for the test
             # print 'stim start:', stim_info[1]['components'][0]['start_s']
@@ -748,9 +748,6 @@ class ABRPopup(QtGui.QMainWindow):
         if len(trace_data.shape) == 4:
             pass
 
-        # TODO
-        print trace_data.shape
-        print trace_data
         samples = trace_data.shape[-1]
         traces = trace_data.shape[0]
         reps = trace_data.shape[1]
@@ -794,8 +791,6 @@ class ABRPopup(QtGui.QMainWindow):
             self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
             return
 
-        print 'intensity', len(intensity)
-        print 'frequency', len(frequency)
 
         freq = []
         inten = []
@@ -813,7 +808,7 @@ class ABRPopup(QtGui.QMainWindow):
 
         # Select only the desired frequency
         for t in range(traces):
-            print 'int: ' + str(intensity[t]) + ' freq: ' + str(frequency[t])
+            # print 'int: ' + str(intensity[t]) + ' freq: ' + str(frequency[t])
 
             if float(self.ui.comboBox_frequency.currentText()) == frequency[t]:
                 freq.append(frequency[t])
@@ -822,9 +817,9 @@ class ABRPopup(QtGui.QMainWindow):
                 abr[count, 0, 0, :] = temp[t, 0, 0, :]
                 count += 1
 
-        print 'Select:'
-        for i in range(len(freq)):
-            print 'int: ' + str(inten[i]) + ' freq: ' + str(freq[i])
+        # print 'Select:'
+        # for i in range(len(freq)):
+        #     print 'int: ' + str(inten[i]) + ' freq: ' + str(freq[i])
 
         abrtrace = namedtuple('abrtrace', 'samples trace_num frequency intensity')
 

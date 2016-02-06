@@ -1563,7 +1563,7 @@ class MyForm(QtGui.QMainWindow):
                 freq = int(k.split('_')[0])
                 spl = int(k.split('_')[1])
                 raster = rasters[k]
-                res = ResponseStats(raster)
+                res = ResponseStatsSpikes(raster)
                 tuning.append({'intensity': spl, 'freq': freq / 1000, 'response': res[0], 'responseSTD': res[1]})
 
         tuningCurves = pd.DataFrame(tuning)
@@ -1582,7 +1582,7 @@ class MyForm(QtGui.QMainWindow):
         sns.despine()
         plt.grid(False)
         plt.xlabel('Frequency (kHz)', size=14)
-        plt.ylabel('Response Rate (Hz)', size=14)
+        plt.ylabel('Mean Spikes Per Presentation', size=14)
 
         plt.tick_params(axis='both', which='major', labelsize=14)
 
@@ -1640,7 +1640,7 @@ class MyForm(QtGui.QMainWindow):
                 freq = int(k.split('_')[0])
                 spl = int(k.split('_')[1])
                 raster = rasters[k]
-                res = ResponseStats(raster)
+                res = ResponseStatsSpikes(raster)
                 tuning.append({'intensity': spl, 'freq': freq / 1000, 'response': res[0], 'responseSTD': res[1]})
 
         tuningCurves = pd.DataFrame(tuning)
@@ -2038,6 +2038,62 @@ def ResponseStats(spikeTrains, stimStart=10, stimDuration=50):
             spontStats = [np.mean(spontSpikeCount), np.std(spontSpikeCount)]
         else:
             spontStats = [0, 0]
+    return responseStats
+
+
+def PresentationStats(spikeTrains):
+    """ Average spike rate during the stimulus response.
+    :param spikeTrains, pandas.DataFrame of spike times for each cycle
+    :type spikeTrains: pandas.DataFrame
+    :param stimStart: Beginning of stimulus time
+    :type stimStart: int
+    :param stimDuration: Duration of stimulus response
+    :type stimDuration: int
+    :returns: responseStats, list: average and standard deviation of the rate during the stimulus response
+    """
+    responseSpikeCount = []
+    for k in spikeTrains.keys():
+        spk = spikeTrains[k]
+
+        spikes = spk.values
+        spikes = np.array(spikes)
+        spikes = spikes[~np.isnan(spikes)]
+        responseSpikeCount.append(len(spikes))
+
+    if len(responseSpikeCount) > 0:
+        responseStats = [np.mean(responseSpikeCount), np.std(responseSpikeCount)]
+    else:
+        responseStats = [0, 0]
+
+    return responseStats
+
+
+def ResponseStatsSpikes(spikeTrains, stimStart=10, stimDuration=50):
+    """ Average spike rate during the stimulus response.
+    :param spikeTrains, pandas.DataFrame of spike times for each cycle
+    :type spikeTrains: pandas.DataFrame
+    :param stimStart: Beginning of stimulus time
+    :type stimStart: int
+    :param stimDuration: Duration of stimulus response
+    :type stimDuration: int
+    :returns: responseStats, list: average and standard deviation of the rate during the stimulus response
+    """
+    responseSpikeCount = []
+    for k in spikeTrains.keys():
+        spk = spikeTrains[k]
+
+        spikes = spk.values
+        spikes = np.array(spikes)
+        # print spikes
+        # print spikes[spikes < stimStart + stimDuration + 10]
+        spikes = spikes[~np.isnan(spikes)]
+        responseSpikeCount.append(len(spikes))
+
+    if len(responseSpikeCount) > 0:
+        responseStats = [np.mean(responseSpikeCount), np.std(responseSpikeCount)]
+    else:
+        responseStats = [0, 0]
+
     return responseStats
 
 

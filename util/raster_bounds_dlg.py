@@ -1,5 +1,5 @@
-from QtWrapper import QtGui
 from raster_bounds_dlg_form import Ui_RasterBoundsDialog
+from util.QtWrapper import QtGui
 
 
 class RasterBoundsDialog(QtGui.QDialog, Ui_RasterBoundsDialog):

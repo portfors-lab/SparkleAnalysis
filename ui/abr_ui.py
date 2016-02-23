@@ -256,4 +256,4 @@ class Ui_Form_abr(object):
         self.doubleSpinBox_ymin.setSuffix(_translate("Form_abr", " V", None))
         self.label_ymin.setText(_translate("Form_abr", "Y Min", None))
 
-from pyqtgraph_widgets import TraceWidget
+from util.pyqtgraph_widgets import TraceWidget

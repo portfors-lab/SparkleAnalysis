@@ -21,6 +21,59 @@ def refractory(times, refract=0.002):
     return times_refract
 
 
+def get_spike_times(signal, threshold, fs):
+    times = []
+
+    if threshold >= 0:
+        over, = np.where(signal > float(threshold))
+        segments, = np.where(np.diff(over) > 1)
+    else:
+        over, = np.where(signal < float(threshold))
+        segments, = np.where(np.diff(over) > 1)
+
+    if len(over) > 1:
+        if len(segments) == 0:
+            segments = [0, len(over) - 1]
+        else:
+            # add end points to sections for looping
+            if segments[0] != 0:
+                segments = np.insert(segments, [0], [0])
+            else:
+                # first point in singleton
+                times.append(float(over[0]) / fs)
+                if 1 not in segments:
+                    # make sure that first point is in there
+                    segments[0] = 1
+            if segments[-1] != len(over) - 1:
+                segments = np.insert(segments, [len(segments)], [len(over) - 1])
+            else:
+                times.append(float(over[-1]) / fs)
+
+        for iseg in range(1, len(segments)):
+            if segments[iseg] - segments[iseg - 1] == 1:
+                # only single point over threshold
+                idx = over[segments[iseg]]
+            else:
+                segments[0] = segments[0] - 1
+                # find maximum of continuous set over max
+                idx = over[segments[iseg - 1] + 1] + np.argmax(
+                    signal[over[segments[iseg - 1] + 1]:over[segments[iseg]]])
+            times.append(float(idx) / fs)
+    elif len(over) == 1:
+        times.append(float(over[0]) / fs)
+
+    if len(times) > 0:
+        refract = 0.002
+        times_refract = []
+        times_refract.append(times[0])
+        for i in range(1, len(times)):
+            if times_refract[-1] + refract <= times[i]:
+                times_refract.append(times[i])
+        return times_refract
+    else:
+        return times
+
+
 def spike_times(signal, threshold, fs, absval=True):
     """Detect spikes from a given signal
 

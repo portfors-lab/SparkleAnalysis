@@ -1,11 +1,10 @@
-import spikestats
-
 import numpy as np
 import pyqtgraph as pg
 
-from viewbox import SpikeyViewBox
-from QtWrapper import QtCore, QtGui
+import spikestats
+from QtWrapper import QtCore
 from raster_bounds_dlg import RasterBoundsDialog
+from viewbox import SpikeyViewBox
 
 STIM_HEIGHT = 0.05
 

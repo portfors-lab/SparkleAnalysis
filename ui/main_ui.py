@@ -418,4 +418,4 @@ class Ui_MainWindow(object):
         self.pushButton_abr.setToolTip(_translate("MainWindow", "Creates an auditory brainstem response (ABR) graph based on your current test.", None))
         self.pushButton_abr.setText(_translate("MainWindow", "ABR", None))
 
-from pyqtgraph_widgets import TraceWidget
+from util.pyqtgraph_widgets import TraceWidget

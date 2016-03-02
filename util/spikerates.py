@@ -18,14 +18,16 @@ def ResponseStats(spikeTrains, stimStart=10, stimDuration=50):
         spk = spikeTrains[k]
         responseSpikeCount.append(len(spk[spk < stimStart + stimDuration + 10]) / dur)
         spontSpikeCount.append(len(spk[spk > 100]) / 0.1)
-        if len(responseSpikeCount) > 0:
-            responseStats = [np.mean(responseSpikeCount), np.std(responseSpikeCount)]
-        else:
-            responseStats = [0, 0]
-        if len(spontSpikeCount) > 0:
-            spontStats = [np.mean(spontSpikeCount), np.std(spontSpikeCount)]
-        else:
-            spontStats = [0, 0]
+
+    if len(responseSpikeCount) > 0:
+        responseStats = [np.mean(responseSpikeCount), np.std(responseSpikeCount)]
+    else:
+        responseStats = [0, 0]
+    if len(spontSpikeCount) > 0:
+        spontStats = [np.mean(spontSpikeCount), np.std(spontSpikeCount)]
+    else:
+        spontStats = [0, 0]
+
     return responseStats
 
 

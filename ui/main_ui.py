@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'c:/Users/Joel/Documents/AnalysisGui/ui/main.ui'
 #
-# Created: Tue Jan 12 13:53:03 2016
+# Created: Tue Mar 01 15:51:59 2016
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -334,12 +334,9 @@ class Ui_MainWindow(object):
         self.pushButton_historgram = QtGui.QPushButton(self.centralwidget)
         self.pushButton_historgram.setObjectName(_fromUtf8("pushButton_historgram"))
         self.gridLayout_3.addWidget(self.pushButton_historgram, 1, 0, 1, 1)
-        self.pushButton_tuning_curve_2 = QtGui.QPushButton(self.centralwidget)
-        self.pushButton_tuning_curve_2.setObjectName(_fromUtf8("pushButton_tuning_curve_2"))
-        self.gridLayout_3.addWidget(self.pushButton_tuning_curve_2, 3, 0, 1, 1)
-        self.pushButton_tuning_curve_1 = QtGui.QPushButton(self.centralwidget)
-        self.pushButton_tuning_curve_1.setObjectName(_fromUtf8("pushButton_tuning_curve_1"))
-        self.gridLayout_3.addWidget(self.pushButton_tuning_curve_1, 2, 0, 1, 1)
+        self.pushButton_tuning_curve = QtGui.QPushButton(self.centralwidget)
+        self.pushButton_tuning_curve.setObjectName(_fromUtf8("pushButton_tuning_curve"))
+        self.gridLayout_3.addWidget(self.pushButton_tuning_curve, 2, 0, 1, 1)
         self.pushButton_raster = QtGui.QPushButton(self.centralwidget)
         self.pushButton_raster.setStatusTip(_fromUtf8(""))
         self.pushButton_raster.setWhatsThis(_fromUtf8(""))
@@ -347,13 +344,13 @@ class Ui_MainWindow(object):
         self.gridLayout_3.addWidget(self.pushButton_raster, 0, 0, 1, 1)
         self.pushButton_io_test = QtGui.QPushButton(self.centralwidget)
         self.pushButton_io_test.setObjectName(_fromUtf8("pushButton_io_test"))
-        self.gridLayout_3.addWidget(self.pushButton_io_test, 4, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.pushButton_io_test, 3, 0, 1, 1)
         self.pushButton_spike_rates = QtGui.QPushButton(self.centralwidget)
         self.pushButton_spike_rates.setObjectName(_fromUtf8("pushButton_spike_rates"))
-        self.gridLayout_3.addWidget(self.pushButton_spike_rates, 5, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.pushButton_spike_rates, 4, 0, 1, 1)
         self.pushButton_abr = QtGui.QPushButton(self.centralwidget)
         self.pushButton_abr.setObjectName(_fromUtf8("pushButton_abr"))
-        self.gridLayout_3.addWidget(self.pushButton_abr, 6, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.pushButton_abr, 5, 0, 1, 1)
         self.horizontalLayout_2.addLayout(self.gridLayout_3)
         self.gridLayout.addLayout(self.horizontalLayout_2, 2, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -405,10 +402,8 @@ class Ui_MainWindow(object):
         self.label_stim_type.setText(_translate("MainWindow", "None", None))
         self.pushButton_historgram.setToolTip(_translate("MainWindow", "Creates a histogram based  on your test number, trace and threshold.", None))
         self.pushButton_historgram.setText(_translate("MainWindow", "Histogram", None))
-        self.pushButton_tuning_curve_2.setToolTip(_translate("MainWindow", "Creates a tuning curve based on your test number and threshold.", None))
-        self.pushButton_tuning_curve_2.setText(_translate("MainWindow", "Tuning Curve 2", None))
-        self.pushButton_tuning_curve_1.setToolTip(_translate("MainWindow", "Creates a tuning curve based on your test number and threshold.", None))
-        self.pushButton_tuning_curve_1.setText(_translate("MainWindow", "Tuning Curve 1", None))
+        self.pushButton_tuning_curve.setToolTip(_translate("MainWindow", "Opens a window for creating tuning curve plots.", None))
+        self.pushButton_tuning_curve.setText(_translate("MainWindow", "Tuning Curve", None))
         self.pushButton_raster.setToolTip(_translate("MainWindow", "Creates a raster based  on your test number, trace and threshold.", None))
         self.pushButton_raster.setText(_translate("MainWindow", "Raster", None))
         self.pushButton_io_test.setToolTip(_translate("MainWindow", "Opens a window for creating I/O plots.", None))

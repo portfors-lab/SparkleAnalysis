@@ -16,6 +16,7 @@ from ui.main_ui import Ui_MainWindow
 from dialogs.SpikeRatesDialog import SpikeRatesDialog
 from dialogs.MultiIODialog import MultiIODialog
 from dialogs.ABRDialog import ABRDialog
+from dialogs.TuningCurveDialog import TuningCurveDialog
 
 from util.spikerates import ResponseStats
 from util.spikerates import ResponseStatsSpikes
@@ -42,8 +43,7 @@ class MyForm(QtGui.QMainWindow):
 
         QtCore.QObject.connect(self.ui.pushButton_raster, QtCore.SIGNAL("clicked()"), self.graph_raster)
         QtCore.QObject.connect(self.ui.pushButton_historgram, QtCore.SIGNAL("clicked()"), self.graph_historgram)
-        QtCore.QObject.connect(self.ui.pushButton_tuning_curve_1, QtCore.SIGNAL("clicked()"), self.graph_rainbow_tuning_curve)
-        QtCore.QObject.connect(self.ui.pushButton_tuning_curve_2, QtCore.SIGNAL("clicked()"), self.graph_tuning_curve)
+        QtCore.QObject.connect(self.ui.pushButton_tuning_curve, QtCore.SIGNAL("clicked()"), self.graph_tuning_curve)
         # QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_io_test)
         QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_multi_io_test)
         QtCore.QObject.connect(self.ui.pushButton_spike_rates, QtCore.SIGNAL("clicked()"), self.graph_spike_rates)
@@ -525,6 +525,7 @@ class MyForm(QtGui.QMainWindow):
 
         self.dialog.populate_checkboxes(filename)
         self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.ico'))
+        self.dialog.setWindowTitle('Sparkle Analysis - Spike Rates')
         self.dialog.show()
 
     def graph_multi_io_test(self):
@@ -538,6 +539,7 @@ class MyForm(QtGui.QMainWindow):
 
         self.dialog.populate_checkboxes(filename, self.ui.doubleSpinBox_threshold.value())
         self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.ico'))
+        self.dialog.setWindowTitle('Sparkle Analysis - I/O Test')
         self.dialog.show()
 
     def graph_abr(self):
@@ -551,6 +553,25 @@ class MyForm(QtGui.QMainWindow):
 
         self.dialog.populate_boxes(filename)
         self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.ico'))
+        self.dialog.setWindowTitle('Sparkle Analysis - ABRs')
+        self.dialog.show()
+
+    def graph_tuning_curve(self):
+        self.dialog = TuningCurveDialog()
+
+        filename = self.filename = self.ui.lineEdit_file_name.text()
+
+        # Validate filename
+        if not self.valid_filename(filename):
+            return
+
+        self.dialog.populate_boxes(filename)
+        self.dialog.set_threshold(self.ui.doubleSpinBox_threshold.value())
+        self.dialog.set_test_num(self.ui.comboBox_test_num.currentIndex())
+        self.dialog.set_channel_num(self.ui.comboBox_channel.currentIndex())
+        self.dialog.set_trace_num(self.ui.comboBox_trace.currentIndex())
+        self.dialog.setWindowIcon(QtGui.QIcon('images/horsey.ico'))
+        self.dialog.setWindowTitle('Sparkle Analysis - Tuning Curve Generator')
         self.dialog.show()
 
     def graph_io_test(self):
@@ -635,132 +656,6 @@ class MyForm(QtGui.QMainWindow):
                   + str(self.ui.comboBox_test_num.currentText()).replace('test_', 'Test '))
 
         plt.show()
-
-    def graph_rainbow_tuning_curve(self):
-        filename = self.filename = self.ui.lineEdit_file_name.text()
-
-        # Validate filename
-        if not self.valid_filename(filename):
-            return
-
-        rasters = self.generate_rasters()
-
-        tuning = []
-        orderedKeys, freqs, spls = self.GetFreqsAttns(rasters)
-
-        for s in range(len(orderedKeys)):
-            for k in orderedKeys[s]:
-                freq = int(k.split('_')[0])
-                spl = int(k.split('_')[1])
-                raster = rasters[k]
-                res = ResponseStatsSpikes(raster)
-                tuning.append({'intensity': spl, 'freq': freq / 1000, 'response': res[0], 'responseSTD': res[1]})
-
-        tuningCurves = pd.DataFrame(tuning)
-        db = np.unique(tuningCurves['intensity'])
-
-        axes = []
-        for d in db:
-            if axes:
-                tuningCurves[tuningCurves['intensity'] == d].plot(x='freq', y='response', ax=axes, yerr='responseSTD', capthick=1,
-                                                              label=str(d) + ' dB')
-            else:
-                axes = tuningCurves[tuningCurves['intensity'] == d].plot(x='freq', y='response', yerr='responseSTD', capthick=1,
-                                                              label=str(d) + ' dB')
-
-        plt.legend(loc='upper right', fontsize=12, frameon=True)
-        sns.despine()
-        plt.grid(False)
-        plt.xlabel('Frequency (kHz)', size=14)
-        plt.ylabel('Mean Spikes Per Presentation', size=14)
-
-        plt.tick_params(axis='both', which='major', labelsize=14)
-
-        plt.title(str.split(str(filename), '/')[-1].replace('.hdf5', '') + ' '
-                  + str(self.ui.comboBox_test_num.currentText()).replace('test_', 'Test '))
-
-        plt.figtext(.02, .02, 'Threshold: ' + str(self.ui.doubleSpinBox_threshold.value()) + ' V')
-
-        plt.show()
-
-        title = str.split(str(filename), '/')[-1].replace('.hdf5', '') + '_' \
-                    + str(self.ui.comboBox_test_num.currentText())
-
-        # plt.savefig('output' + os.sep + 'tuning_curves' + os.sep + title + '_tuning_curve_1.png')
-
-        check_output_folders()
-
-        try:
-            out_file = open('output' + os.sep + 'tuning_curves' + os.sep + title + '_tuning_curve_1.csv', 'wb')
-        except IOError, e:
-            self.add_message('Unable to open ' + str(filename) + '\nError ' + str(e.errno) + ': ' + e.strerror + '\n')
-        writer = csv.writer(out_file)
-
-        writer.writerow(['File:', filename])
-        writer.writerow(['Test:', self.ui.comboBox_test_num.currentText()])
-        writer.writerow(['Threshold (V):', self.ui.doubleSpinBox_threshold.value()])
-        writer.writerow([])
-
-        for d in db:
-            tc_intensity = list(tuningCurves[tuningCurves['intensity'] == d]['intensity'])[0]
-            tc_freq = list(tuningCurves[tuningCurves['intensity'] == d]['freq'])
-            tc_response = list(tuningCurves[tuningCurves['intensity'] == d]['response'])
-
-            writer.writerow(['Intensity (dB):', tc_intensity])
-            writer.writerow(['Frequency (kHz):'] + tc_freq)
-            writer.writerow(['Response (Hz):'] + tc_response)
-            writer.writerow([])
-
-        out_file.close()
-
-    def graph_tuning_curve(self):
-        filename = self.filename = self.ui.lineEdit_file_name.text()
-
-        # Validate filename
-        if not self.valid_filename(filename):
-            return
-
-        rasters = self.generate_rasters()
-
-        tuning = []
-        orderedKeys, freqs, spls = self.GetFreqsAttns(rasters)
-
-        for s in range(len(orderedKeys)):
-            for k in orderedKeys[s]:
-                freq = int(k.split('_')[0])
-                spl = int(k.split('_')[1])
-                raster = rasters[k]
-                res = ResponseStatsSpikes(raster)
-                tuning.append({'intensity': spl, 'freq': freq / 1000, 'response': res[0], 'responseSTD': res[1]})
-
-        tuningCurves = pd.DataFrame(tuning)
-
-        # Black and White Tuning Curve
-        tc_plot = plt.figure()
-
-        colorRange = (-10, 10.1)
-        I = np.unique(np.array(tuningCurves['intensity']))
-        F = np.array(tuningCurves['freq'])
-        R = np.array(np.zeros((len(I), len(F))))
-        for ci, i in enumerate(I):
-            for cf, f in enumerate(F):
-                R[ci, cf] = tuningCurves['response'].where(tuningCurves['intensity'] == i).where(
-                    tuningCurves['freq'] == f).dropna().values[0]
-        levelRange = np.arange(colorRange[0], colorRange[1],
-                               (colorRange[1] - colorRange[0]) / float(25 * (colorRange[1] - colorRange[0])))
-        sns.set_context(rc={"figure.figsize": (7, 4)})
-        ax = plt.contourf(F, I, R)  # , vmin=colorRange[0], vmax=colorRange[1], levels=levelRange, cmap = cm.bwr )
-        plt.colorbar()
-        # plt.title(unit, fontsize=14)
-        plt.xlabel('Frequency (kHz)', fontsize=14)
-        plt.ylabel('Intensity (dB)', fontsize=14)
-
-        plt.title(str.split(str(filename), '/')[-1].replace('.hdf5', '') + ' '
-                  + str(self.ui.comboBox_test_num.currentText()).replace('test_', 'Test '))
-
-        plt.figtext(.02, .02, 'Threshold: ' + str(self.ui.doubleSpinBox_threshold.value()) + ' V')
-
-        tc_plot.show()
 
     def graph_raster(self):
         filename = self.filename = self.ui.lineEdit_file_name.text()

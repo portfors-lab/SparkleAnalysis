@@ -648,23 +648,13 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="0">
-         <widget class="QPushButton" name="pushButton_tuning_curve_2">
-          <property name="toolTip">
-           <string>Creates a tuning curve based on your test number and threshold.</string>
-          </property>
-          <property name="text">
-           <string>Tuning Curve 2</string>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="0">
-         <widget class="QPushButton" name="pushButton_tuning_curve_1">
+         <widget class="QPushButton" name="pushButton_tuning_curve">
           <property name="toolTip">
-           <string>Creates a tuning curve based on your test number and threshold.</string>
+           <string>Opens a window for creating tuning curve plots.</string>
           </property>
           <property name="text">
-           <string>Tuning Curve 1</string>
+           <string>Tuning Curve</string>
           </property>
          </widget>
         </item>
@@ -684,7 +674,7 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="0">
+        <item row="3" column="0">
          <widget class="QPushButton" name="pushButton_io_test">
           <property name="toolTip">
            <string>Opens a window for creating I/O plots.</string>
@@ -694,7 +684,7 @@
           </property>
          </widget>
         </item>
-        <item row="5" column="0">
+        <item row="4" column="0">
          <widget class="QPushButton" name="pushButton_spike_rates">
           <property name="toolTip">
            <string>Opens a window for creating spike rate plots.</string>
@@ -704,7 +694,7 @@
           </property>
          </widget>
         </item>
-        <item row="6" column="0">
+        <item row="5" column="0">
          <widget class="QPushButton" name="pushButton_abr">
           <property name="toolTip">
            <string>Creates an auditory brainstem response (ABR) graph based on your current test.</string>
@@ -736,7 +726,7 @@
   <customwidget>
    <class>TraceWidget</class>
    <extends>QWidget</extends>
-   <header>pyqtgraph_widgets</header>
+   <header>util.pyqtgraph_widgets</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

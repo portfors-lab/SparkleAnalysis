@@ -818,11 +818,11 @@ class MyForm(QtGui.QMainWindow):
             spikeTimes = rasters.stack()
         else:
             spikeTimes = rasters.dropna()
-        # --- Histogram of spike times (2 ms bins)---
+        # --- Histogram of spike times (1 ms bins)---
         sns.set_style("white")
         sns.set_style("ticks")
         histogram_f = plt.figure(figsize=(8, 3))
-        axHist = spikeTimes.hist(bins=int(duration / 2), range=(0, duration))  # , figsize=(8,3))
+        axHist = spikeTimes.hist(bins=int(duration / 1), range=(0, duration))  # , figsize=(8,3))
         sns.despine()
         plt.xlim(0, duration)
         plt.xlabel('Time (ms)', size=14)

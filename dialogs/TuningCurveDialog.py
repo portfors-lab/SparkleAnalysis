@@ -305,22 +305,6 @@ class TuningCurveDialog(QtGui.QMainWindow):
         h_file.close()
 
     def generate_tuning_curve(self):
-        print('Generating Tuning Curve:')
-
-        # Check which tuning curve to generate
-        if self.ui.radioButtonFreq.isChecked():
-            print('\tRainbow')
-        elif self.ui.radioButtonContour.isChecked():
-            print('\tContour')
-
-        # Check which unit type to use
-        if self.ui.radioButtonMeanSpikes.isChecked():
-            print('\tMean Spikes')
-        elif self.ui.radioButtonResponseRate.isChecked():
-            print('\tResponse Rate')
-        elif self.ui.radioButtonOther.isChecked():
-            print('\tOther')
-
         filename = self.filename
 
         # Validate filename

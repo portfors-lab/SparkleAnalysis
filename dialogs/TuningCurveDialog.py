@@ -39,6 +39,8 @@ class TuningCurveDialog(QtGui.QMainWindow):
 
         QtCore.QObject.connect(self.ui.comboBox_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_traces)
         QtCore.QObject.connect(self.ui.comboBox_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_channels)
+        QtCore.QObject.connect(self.ui.comboBox_channel, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.generate_view)
+        # TODO When changing traces think about a way to keep from resetting channel when unnecessary
 
         QtCore.QObject.connect(self.ui.pushButtonGenerate, QtCore.SIGNAL("clicked()"), self.generate_tuning_curve)
 
@@ -174,12 +176,6 @@ class TuningCurveDialog(QtGui.QMainWindow):
                         target_seg = key
                         target_test = test
 
-        if self.ui.comboBox_test_num.currentText() == '' or self.ui.comboBox_channel.count() < 2:
-            self.ui.comboBox_channel.setEnabled(False)
-            self.ui.comboBox_channel.clear()
-        else:
-            self.ui.comboBox_channel.setEnabled(True)
-
         if self.ui.comboBox_test_num.count() == 0:
             h_file.close()
             self.clear_view()
@@ -202,6 +198,12 @@ class TuningCurveDialog(QtGui.QMainWindow):
         else:
             for i in range(channels):
                 self.ui.comboBox_channel.addItem('channel_' + str(i+1))
+
+        if self.ui.comboBox_test_num.currentText() == '' or self.ui.comboBox_channel.count() < 2:
+            self.ui.comboBox_channel.setEnabled(False)
+            self.ui.comboBox_channel.clear()
+        else:
+            self.ui.comboBox_channel.setEnabled(True)
 
         if self.ui.comboBox_test_num.currentText() != '' and self.ui.comboBox_trace.currentText() != '' and self.ui.comboBox_channel != '':
             self.generate_view()
@@ -545,7 +547,8 @@ class TuningCurveDialog(QtGui.QMainWindow):
 
         # Still shape of 4
         if len(trace_data.shape) == 4:
-            trace_data = trace_data[:, :, 1, :]
+            target_chan = int(self.ui.comboBox_channel.currentText().replace('channel_', '')) - 1
+            trace_data = trace_data[:, :, target_chan, :]
             trace_data = trace_data.squeeze()
 
         # Compute threshold from average maximum of traces

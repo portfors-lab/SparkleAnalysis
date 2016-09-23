@@ -57,6 +57,7 @@ class MyForm(QtGui.QMainWindow):
         QtCore.QObject.connect(self.ui.comboBox_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_traces)
         QtCore.QObject.connect(self.ui.comboBox_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_reps)
         QtCore.QObject.connect(self.ui.comboBox_rep, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_channels)
+        QtCore.QObject.connect(self.ui.comboBox_channel, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.generate_view)
 
         QtCore.QObject.connect(self.ui.checkBox_custom_window, QtCore.SIGNAL("toggled(bool)"), self.update_window)
         QtCore.QObject.connect(self.ui.doubleSpinBox_xmax, QtCore.SIGNAL("valueChanged(const QString&)"), self.update_window)
@@ -149,7 +150,8 @@ class MyForm(QtGui.QMainWindow):
 
         # Still shape of 4
         if len(trace_data.shape) == 4:
-            trace_data = trace_data[:, :, 1, :]
+            target_chan = int(self.ui.comboBox_channel.currentText().replace('channel_', '')) - 1
+            trace_data = trace_data[:, :, target_chan, :]
             trace_data = trace_data.squeeze()
 
         # Compute threshold from average maximum of traces
@@ -387,14 +389,6 @@ class MyForm(QtGui.QMainWindow):
             self.ui.comboBox_rep.setEnabled(False)
             return
 
-        if self.ui.comboBox_rep.currentText() == '' or self.ui.comboBox_channel.count() < 2:
-            self.ui.label_channel.setEnabled(False)
-            self.ui.comboBox_channel.setEnabled(False)
-            self.ui.comboBox_channel.clear()
-        else:
-            self.ui.label_channel.setEnabled(True)
-            self.ui.comboBox_channel.setEnabled(True)
-
         if self.ui.comboBox_test_num.count() == 0:
             h_file.close()
             self.clear_view()
@@ -417,6 +411,14 @@ class MyForm(QtGui.QMainWindow):
         else:
             for i in range(channels):
                 self.ui.comboBox_channel.addItem('channel_' + str(i+1))
+
+        if self.ui.comboBox_rep.currentText() == '' or self.ui.comboBox_channel.count() < 2:
+            self.ui.label_channel.setEnabled(False)
+            self.ui.comboBox_channel.setEnabled(False)
+            self.ui.comboBox_channel.clear()
+        else:
+            self.ui.label_channel.setEnabled(True)
+            self.ui.comboBox_channel.setEnabled(True)
 
         if self.ui.comboBox_trace.currentText() != '' and self.ui.comboBox_rep.currentText() != '' and self.ui.comboBox_channel != '':
             self.generate_view()

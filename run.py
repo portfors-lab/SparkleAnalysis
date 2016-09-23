@@ -36,29 +36,49 @@ class MyForm(QtGui.QMainWindow):
 
         self.message_num = 0
 
-        self.ui.textEdit.setReadOnly(True)
+        self.review_test = None
+        self.raster_test = None
+        self.histogram_test = None
+        self.tc_test = None
+        self.abr_test = None
+        self.io_test = None
+        self.sr_test = None
+
+        self.tabfocus()
 
         # TODO Complete Spike Rates
         # self.ui.pushButton_spike_rates.setEnabled(False)
 
-        QtCore.QObject.connect(self.ui.pushButton_raster, QtCore.SIGNAL("clicked()"), self.graph_raster)
-        QtCore.QObject.connect(self.ui.pushButton_historgram, QtCore.SIGNAL("clicked()"), self.graph_historgram)
-        QtCore.QObject.connect(self.ui.pushButton_tuning_curve, QtCore.SIGNAL("clicked()"), self.graph_tuning_curve)
-        # QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_io_test)
-        QtCore.QObject.connect(self.ui.pushButton_io_test, QtCore.SIGNAL("clicked()"), self.graph_multi_io_test)
-        QtCore.QObject.connect(self.ui.pushButton_spike_rates, QtCore.SIGNAL("clicked()"), self.graph_spike_rates)
-        QtCore.QObject.connect(self.ui.pushButton_abr, QtCore.SIGNAL("clicked()"), self.graph_abr)
-
         QtCore.QObject.connect(self.ui.pushButton_browse, QtCore.SIGNAL("clicked()"), self.browse)
         QtCore.QObject.connect(self.ui.pushButton_auto_threshold, QtCore.SIGNAL("clicked()"), self.auto_threshold)
-        QtCore.QObject.connect(self.ui.radioButton_normal, QtCore.SIGNAL("toggled(bool)"), self.generate_view)
         QtCore.QObject.connect(self.ui.doubleSpinBox_threshold, QtCore.SIGNAL("valueChanged(const QString&)"), self.update_thresh)
 
-        QtCore.QObject.connect(self.ui.comboBox_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_traces)
-        QtCore.QObject.connect(self.ui.comboBox_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_reps)
-        QtCore.QObject.connect(self.ui.comboBox_rep, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_channels)
+        QtCore.QObject.connect(self.ui.tabWidget, QtCore.SIGNAL("currentChanged(int)"), self.tabfocus)
 
-        QtCore.QObject.connect(self.ui.checkBox_custom_window, QtCore.SIGNAL("toggled(bool)"), self.update_window)
+        # QtCore.QObject.connect(self.ui.comboBox_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_traces)
+        QtCore.QObject.connect(self.ui.comboBox_review_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_traces)
+        QtCore.QObject.connect(self.ui.comboBox_raster_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_traces)
+        QtCore.QObject.connect(self.ui.comboBox_histogram_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_traces)
+        QtCore.QObject.connect(self.ui.comboBox_tc_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_traces)
+        QtCore.QObject.connect(self.ui.comboBox_abr_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_traces)
+        QtCore.QObject.connect(self.ui.comboBox_io_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_traces)
+        QtCore.QObject.connect(self.ui.comboBox_sr_test_num, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_traces)
+        # QtCore.QObject.connect(self.ui.comboBox_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_reps)
+        QtCore.QObject.connect(self.ui.comboBox_review_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_reps)
+        QtCore.QObject.connect(self.ui.comboBox_raster_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_reps)
+        QtCore.QObject.connect(self.ui.comboBox_histogram_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_reps)
+        QtCore.QObject.connect(self.ui.comboBox_tc_view_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_reps)
+        QtCore.QObject.connect(self.ui.comboBox_io_view_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_reps)
+        QtCore.QObject.connect(self.ui.comboBox_sr_view_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_reps)
+        # QtCore.QObject.connect(self.ui.comboBox_rep, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_channels)
+        QtCore.QObject.connect(self.ui.comboBox_review_rep, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_channels)
+        QtCore.QObject.connect(self.ui.comboBox_raster_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_channels)
+        QtCore.QObject.connect(self.ui.comboBox_histogram_trace, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_channels)
+        QtCore.QObject.connect(self.ui.comboBox_tc_view_rep, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_channels)
+        QtCore.QObject.connect(self.ui.comboBox_io_view_rep, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_channels)
+        QtCore.QObject.connect(self.ui.comboBox_sr_view_rep, QtCore.SIGNAL("currentIndexChanged(const QString&)"), self.load_channels)
+
+        # QtCore.QObject.connect(self.ui.checkBox_custom_window, QtCore.SIGNAL("toggled(bool)"), self.update_window)
         QtCore.QObject.connect(self.ui.doubleSpinBox_xmax, QtCore.SIGNAL("valueChanged(const QString&)"), self.update_window)
         QtCore.QObject.connect(self.ui.doubleSpinBox_xmin, QtCore.SIGNAL("valueChanged(const QString&)"), self.update_window)
         QtCore.QObject.connect(self.ui.doubleSpinBox_ymax, QtCore.SIGNAL("valueChanged(const QString&)"), self.update_window)
@@ -68,11 +88,10 @@ class MyForm(QtGui.QMainWindow):
         self.ui.view.threshLine.sigPositionChangeFinished.connect(self.update_thresh2)
 
     def browse(self):
-        self.ui.comboBox_test_num.clear()
 
         QtGui.QFileDialog(self)
         self.filename = QtGui.QFileDialog.getOpenFileName()
-        self.ui.lineEdit_file_name.setText(self.filename)
+        self.ui.lineEdit_filepath.setText(self.filename)
 
         # If the filename is not blank, attempt to extract test numbers and place them into the combobox
         if self.filename != '':
@@ -81,11 +100,7 @@ class MyForm(QtGui.QMainWindow):
                     h_file = h5py.File(unicode(self.filename), 'r')
                 except IOError:
                     self.add_message('Error: I/O Error')
-                    self.ui.label_test_num.setEnabled(False)
-                    self.ui.label_comments.setEnabled(False)
-                    self.ui.lineEdit_comments.setEnabled(False)
-                    self.ui.lineEdit_comments.setText('')
-                    self.ui.comboBox_test_num.setEnabled(False)
+                    self.disable()
                     return
 
                 tests = {}
@@ -96,42 +111,91 @@ class MyForm(QtGui.QMainWindow):
 
                 sorted_tests = sorted(tests.items(), key=operator.itemgetter(1))
 
-                for test in sorted_tests:
-                    self.ui.comboBox_test_num.addItem(test[0])
+                self.clear_test()
 
-                self.ui.label_test_num.setEnabled(True)
-                self.ui.label_comments.setEnabled(True)
-                self.ui.lineEdit_comments.setEnabled(True)
-                self.ui.comboBox_test_num.setEnabled(True)
+                for test in sorted_tests:
+                    self.ui.comboBox_review_test_num.addItem(test[0])
+                    self.ui.comboBox_raster_test_num.addItem(test[0])
+                    self.ui.comboBox_histogram_test_num.addItem(test[0])
+                    self.ui.comboBox_tc_test_num.addItem(test[0])
+                    self.ui.comboBox_abr_test_num.addItem(test[0])
+                    self.ui.comboBox_io_test_num.addItem(test[0])
+                    self.ui.comboBox_sr_test_num.addItem(test[0])
+
+                # Enable Tests
+                self.ui.comboBox_review_test_num.setEnabled(True)
+                self.ui.comboBox_raster_test_num.setEnabled(True)
+                self.ui.comboBox_histogram_test_num.setEnabled(True)
+                self.ui.comboBox_tc_test_num.setEnabled(True)
+                self.ui.comboBox_abr_test_num.setEnabled(True)
+                self.ui.comboBox_io_test_num.setEnabled(True)
+                self.ui.comboBox_sr_test_num.setEnabled(True)
+
+                self.load_traces()
+
+                # self.review_test = sorted_tests[0][0].encode("utf-8")
+                # self.raster_test = sorted_tests[0][0].encode("utf-8")
+                # self.histogram_test = sorted_tests[0][0].encode("utf-8")
+                # self.tc_test = sorted_tests[0][0].encode("utf-8")
+                # self.abr_test = sorted_tests[0][0].encode("utf-8")
+                # self.io_test = sorted_tests[0][0].encode("utf-8")
+                # self.sr_test = sorted_tests[0][0].encode("utf-8")
+
+                target_seg = None
+
+                # Find comments on the first test
+                for key in h_file.keys():
+                    if 'segment' in key:
+                        for test in h_file[key].keys():
+                            if sorted_tests[0][0] == test:
+                                target_seg = key
+
+                # Add comments for first test
+                comment = h_file[target_seg].attrs['comment']
+                self.ui.lineEdit_review_comments.setText(comment)
+                self.ui.lineEdit_raster_comments.setText(comment)
+                self.ui.lineEdit_histogram_comments.setText(comment)
+                self.ui.lineEdit_tc_comments.setText(comment)
+                self.ui.lineEdit_abr_comments.setText(comment)
+                self.ui.lineEdit_io_comments.setText(comment)
+                self.ui.lineEdit_sr_comments.setText(comment)
 
                 h_file.close()
 
             else:
                 self.add_message('Error: Must select a .hdf5 file.')
-                self.ui.label_test_num.setEnabled(False)
-                self.ui.label_comments.setEnabled(False)
-                self.ui.lineEdit_comments.setEnabled(False)
-                self.ui.lineEdit_comments.setText('')
-                self.ui.comboBox_test_num.setEnabled(False)
+                self.disable()
                 return
         else:
             self.add_message('Error: Must select a file to open.')
-            self.ui.label_test_num.setEnabled(False)
-            self.ui.label_comments.setEnabled(False)
-            self.ui.lineEdit_comments.setEnabled(False)
-            self.ui.lineEdit_comments.setText('')
-            self.ui.comboBox_test_num.setEnabled(False)
+            self.disable()
             return
 
     def auto_threshold(self):
         thresh_fraction = 0.7
 
-        filename = self.filename = self.ui.lineEdit_file_name.text()
+        filename = self.filename = self.ui.lineEdit_filepath.text()
 
         # Validate filename
         if self.valid_filename(filename):
             h_file = h5py.File(unicode(self.filename), 'r')
-            target_test = self.ui.comboBox_test_num.currentText()
+            # target_test = self.ui.comboBox_test_num.currentText()
+            if self.ui.tabWidget.currentWidget().objectName() == 'review':
+                target_test = self.ui.comboBox_review_test_num.currentText()
+            elif self.ui.tabWidget.currentWidget().objectName() == 'raster':
+                target_test = self.ui.comboBox_raster_test_num.currentText()
+            elif self.ui.tabWidget.currentWidget().objectName() == 'histogram':
+                target_test = self.ui.comboBox_histogram_test_num.currentText()
+            elif self.ui.tabWidget.currentWidget().objectName() == 'tuning_curve':
+                target_test = self.ui.comboBox_tc_test_num.currentText()
+            elif self.ui.tabWidget.currentWidget().objectName() == 'abr':
+                target_test = self.ui.comboBox_abr_test_num.currentText()
+            elif self.ui.tabWidget.currentWidget().objectName() == 'io_test':
+                target_test = self.ui.comboBox_io_test_num.currentText()
+            elif self.ui.tabWidget.currentWidget().objectName() == 'spike_rates':
+                target_test = self.ui.comboBox_sr_test_num.currentText()
+            else:
+                return
         else:
             return
 
@@ -165,23 +229,17 @@ class MyForm(QtGui.QMainWindow):
         h_file.close()
 
     def generate_view(self):
-        filename = self.filename = self.ui.lineEdit_file_name.text()
+        filename = self.filename = self.ui.lineEdit_filepath.text()
 
         # Validate filename
         if self.valid_filename(filename):
             h_file = h5py.File(unicode(self.filename), 'r')
-            target_test = self.ui.comboBox_test_num.currentText()
+            target_test = self.ui.lineEdit_filepath.text()
         else:
             return
 
         # clear view
         self.clear_view()
-
-        if self.ui.radioButton_normal.isChecked():
-            self.ui.view.invertPolarity(False)
-
-        if self.ui.radioButton_inverse.isChecked():
-            self.ui.view.invertPolarity(True)
 
         for key in h_file.keys():
             if 'segment' in key:
@@ -296,26 +354,76 @@ class MyForm(QtGui.QMainWindow):
         return True
 
     def load_traces(self):
-        self.ui.comboBox_trace.clear()
+        tab = self.ui.tabWidget.currentWidget().objectName()
+
+        import time
+        start = time.time()
+
+        # clear old traces
+        if tab == 'review':
+            self.ui.comboBox_review_trace.clear()
+        elif tab == 'raster':
+            self.ui.comboBox_raster_trace.clear()
+        elif tab == 'histogram':
+            self.ui.comboBox_histogram_trace.clear()
+        elif tab == 'tuning_curve':
+            self.ui.comboBox_tc_view_trace.clear()
+        elif tab == 'abr':
+            pass
+        elif tab == 'io_test':
+            self.ui.comboBox_io_view_trace.clear()
+        elif tab == 'spike_rates':
+            self.ui.comboBox_sr_view_trace.clear()
 
         # Validate filename
         if self.valid_filename(self.filename):
             h_file = h5py.File(unicode(self.filename), 'r')
-            target_test = self.ui.comboBox_test_num.currentText()
+            if tab == 'review':
+                target_test = self.ui.comboBox_review_test_num.currentText()
+                self.review_test = self.ui.comboBox_review_test_num.currentText()
+            elif tab == 'raster':
+                target_test = self.ui.comboBox_raster_test_num.currentText()
+                self.raster_test = self.ui.comboBox_raster_test_num.currentText()
+            elif tab == 'histogram':
+                target_test = self.ui.comboBox_histogram_test_num.currentText()
+                self.histogram_test = self.ui.comboBox_histogram_test_num.currentText()
+            elif tab == 'tuning_curve':
+                target_test = self.ui.comboBox_tc_test_num.currentText()
+                self.tc_test = self.ui.comboBox_tc_test_num.currentText()
+            elif tab == 'abr':
+                target_test = self.ui.comboBox_abr_test_num.currentText()
+                self.abr_test = self.ui.comboBox_abr_test_num.currentText()
+            elif tab == 'io_test':
+                target_test = self.ui.comboBox_io_test_num.currentText()
+                self.io_test = self.ui.comboBox_io_test_num.currentText()
+            elif tab == 'spike_rates':
+                target_test = self.ui.comboBox_sr_test_num.currentText()
+                self.sr_test = self.ui.comboBox_sr_test_num.currentText()
         else:
-            self.ui.label_trace.setEnabled(False)
-            self.ui.comboBox_trace.setEnabled(False)
+            self.ui.comboBox_review_trace.setEnabled(False)
+            self.ui.comboBox_raster_trace.setEnabled(False)
+            self.ui.comboBox_histogram_trace.setEnabled(False)
+            self.ui.comboBox_tc_view_trace.setEnabled(False)
+            self.ui.comboBox_io_view_trace.setEnabled(False)
+            self.ui.comboBox_sr_view_trace.setEnabled(False)
+            self.clear_traces()
             return
 
-        if self.ui.comboBox_test_num.currentText() == 'All' or self.ui.comboBox_test_num.currentText() == '':
-            self.ui.label_trace.setEnabled(False)
-            self.ui.comboBox_trace.setEnabled(False)
-            self.ui.comboBox_trace.clear()
-            h_file.close()
-            return
-        else:
-            self.ui.label_trace.setEnabled(True)
-            self.ui.comboBox_trace.setEnabled(True)
+        # Enable boxes
+        if tab == 'review' and self.ui.comboBox_review_test_num != '':
+            self.ui.comboBox_review_trace.setEnabled(True)
+        if tab == 'raster' and self.ui.comboBox_raster_test_num != '':
+            self.ui.comboBox_raster_trace.setEnabled(True)
+        if tab == 'histogram' and self.ui.comboBox_histogram_test_num != '':
+            self.ui.comboBox_histogram_trace.setEnabled(True)
+        if tab == 'tuning_curve' and self.ui.comboBox_tc_test_num != '':
+            self.ui.comboBox_tc_view_trace.setEnabled(True)
+        if tab == 'io_test' and self.ui.comboBox_io_test_num != '':
+            self.ui.comboBox_io_view_trace.setEnabled(True)
+        if tab == 'spike_rates' and self.ui.comboBox_sr_test_num != '':
+            self.ui.comboBox_sr_view_trace.setEnabled(True)
+
+        target_seg = None
 
         for key in h_file.keys():
             if 'segment' in key:
@@ -323,43 +431,100 @@ class MyForm(QtGui.QMainWindow):
                     if target_test == test:
                         target_seg = key
                         target_test = test
+
+        if target_seg is None:
+            return
 
         traces = h_file[target_seg][target_test].value.shape[0]
 
-        for i in range(traces):
-            self.ui.comboBox_trace.addItem('trace_' + str(i+1))
-
-        self.ui.label_trace.setEnabled(True)
-        self.ui.comboBox_trace.setEnabled(True)
+        # Add Traces
+        if tab == 'review':
+            for i in range(traces):
+                self.ui.comboBox_review_trace.addItem('trace_' + str(i + 1))
+        elif tab == 'raster':
+            for i in range(traces):
+                self.ui.comboBox_raster_trace.addItem('trace_' + str(i + 1))
+        elif tab == 'histogram':
+            for i in range(traces):
+                self.ui.comboBox_histogram_trace.addItem('trace_' + str(i + 1))
+        elif tab == 'tuning_curve':
+            for i in range(traces):
+                self.ui.comboBox_tc_view_trace.addItem('trace_' + str(i + 1))
+        elif tab == 'abr':
+            pass
+        elif tab == 'io_test':
+            for i in range(traces):
+                self.ui.comboBox_io_view_trace.addItem('trace_' + str(i + 1))
+        elif tab == 'spike_rates':
+            for i in range(traces):
+                self.ui.comboBox_sr_view_trace.addItem('trace_' + str(i + 1))
 
         comment = h_file[target_seg].attrs['comment']
-        self.ui.lineEdit_comments.setText(comment)
+        if tab == 'review':
+            self.ui.lineEdit_review_comments.setText(comment)
+        elif tab == 'raster':
+            self.ui.lineEdit_raster_comments.setText(comment)
+        elif tab == 'histogram':
+            self.ui.lineEdit_histogram_comments.setText(comment)
+        elif tab == 'tuning_curve':
+            self.ui.lineEdit_tc_comments.setText(comment)
+        elif tab == 'abr':
+            self.ui.lineEdit_abr_comments.setText(comment)
+        elif tab == 'io_test':
+            self.ui.lineEdit_io_comments.setText(comment)
+        elif tab == 'spike_rates':
+            self.ui.lineEdit_sr_comments.setText(comment)
 
         h_file.close()
 
+        end = time.time()
+        print(end - start)
+
     def load_reps(self):
-        self.ui.comboBox_rep.clear()
+        tab = self.ui.tabWidget.currentWidget().objectName()
+
+        self.clear_reps()
 
         # Validate filename
         if self.valid_filename(self.filename):
             h_file = h5py.File(unicode(self.filename), 'r')
-            target_test = self.ui.comboBox_test_num.currentText()
+            if tab == 'review':
+                target_test = self.ui.comboBox_review_test_num.currentText()
+            elif tab == 'raster':
+                target_test = self.ui.comboBox_raster_test_num.currentText()
+            elif tab == 'histogram':
+                target_test = self.ui.comboBox_histogram_test_num.currentText()
+            elif tab == 'tuning_curve':
+                target_test = self.ui.comboBox_tc_test_num.currentText()
+            elif tab == 'abr':
+                target_test = self.ui.comboBox_abr_test_num.currentText()
+            elif tab == 'io_test':
+                target_test = self.ui.comboBox_io_test_num.currentText()
+            elif tab == 'spike_rates':
+                target_test = self.ui.comboBox_sr_test_num.currentText()
         else:
-            self.ui.label_rep.setEnabled(False)
-            self.ui.comboBox_rep.setEnabled(False)
+            self.ui.comboBox_review_rep.setEnabled(False)
+            self.ui.comboBox_tc_view_rep.setEnabled(False)
+            self.ui.comboBox_io_view_rep.setEnabled(False)
+            self.ui.comboBox_sr_view_rep.setEnabled(False)
+            self.clear_reps()
             return
 
-        if self.ui.comboBox_trace.currentText() == 'All' or self.ui.comboBox_trace.currentText() == '':
-            self.ui.label_rep.setEnabled(False)
-            self.ui.comboBox_rep.setEnabled(False)
-            self.ui.comboBox_rep.clear()
-            h_file.close()
-            return
-        else:
-            self.ui.label_rep.setEnabled(True)
-            self.ui.comboBox_rep.setEnabled(True)
+        # Enable boxes
+        if tab == 'review' and self.ui.comboBox_review_trace != '':
+            self.ui.comboBox_review_rep.setEnabled(True)
+        # if tab == 'tuning_curve' and self.ui.comboBox_tc_view_trace != '':
+        #     self.ui.comboBox_tc_view_rep.setEnabled(True)
+        if tab == 'io_test' and self.ui.comboBox_io_view_trace != '':
+            self.ui.comboBox_io_view_rep.setEnabled(True)
+        if tab == 'spike_rates' and self.ui.comboBox_sr_view_trace != '':
+            self.ui.comboBox_sr_view_rep.setEnabled(True)
 
-        self.ui.comboBox_rep.addItem('All')
+        self.ui.comboBox_review_rep.addItem('All')
+        self.ui.comboBox_io_view_rep.addItem('All')
+        self.ui.comboBox_sr_view_rep.addItem('All')
+
+        target_seg = None
 
         for key in h_file.keys():
             if 'segment' in key:
@@ -368,37 +533,95 @@ class MyForm(QtGui.QMainWindow):
                         target_seg = key
                         target_test = test
 
+        if target_seg is None:
+            return
+
         reps = h_file[target_seg][target_test].value.shape[1]
 
-        for i in range(reps):
-            self.ui.comboBox_rep.addItem('rep_' + str(i+1))
+        # Add Traces
+        if tab == 'review':
+            for i in range(reps):
+                self.ui.comboBox_review_rep.addItem('rep_' + str(i + 1))
+        elif tab == 'tuning_curve':
+            for i in range(reps):
+                self.ui.comboBox_tc_view_rep.addItem('rep_' + str(i + 1))
+        elif tab == 'io_test':
+            for i in range(reps):
+                self.ui.comboBox_io_view_rep.addItem('rep_' + str(i + 1))
+        elif tab == 'spike_rates':
+            for i in range(reps):
+                self.ui.comboBox_sr_view_rep.addItem('rep_' + str(i + 1))
 
         h_file.close()
 
     def load_channels(self):
-        self.ui.comboBox_channel.clear()
+        tab = self.ui.tabWidget.currentWidget().objectName()
 
         # Validate filename
         if self.valid_filename(self.filename):
             h_file = h5py.File(unicode(self.filename), 'r')
-            target_test = self.ui.comboBox_test_num.currentText()
+            if tab == 'review':
+                target_test = self.ui.comboBox_review_test_num.currentText()
+            elif tab == 'raster':
+                target_test = self.ui.comboBox_raster_test_num.currentText()
+            elif tab == 'histogram':
+                target_test = self.ui.comboBox_histogram_test_num.currentText()
+            elif tab == 'tuning_curve':
+                target_test = self.ui.comboBox_tc_test_num.currentText()
+            elif tab == 'abr':
+                target_test = self.ui.comboBox_abr_test_num.currentText()
+            elif tab == 'io_test':
+                target_test = self.ui.comboBox_io_test_num.currentText()
+            elif tab == 'spike_rates':
+                target_test = self.ui.comboBox_sr_test_num.currentText()
         else:
-            self.ui.label_rep.setEnabled(False)
-            self.ui.comboBox_rep.setEnabled(False)
+            self.ui.comboBox_review_channel.setEnabled(False)
+            self.ui.comboBox_raster_channel.setEnabled(False)
+            self.ui.comboBox_histogram_channel.setEnabled(False)
+            self.ui.comboBox_tc_view_channel.setEnabled(False)
+            self.ui.comboBox_io_view_channel.setEnabled(False)
+            self.ui.comboBox_sr_view_channel.setEnabled(False)
+            self.clear_channels()
             return
 
-        if self.ui.comboBox_rep.currentText() == '' or self.ui.comboBox_channel.count() < 2:
-            self.ui.label_channel.setEnabled(False)
-            self.ui.comboBox_channel.setEnabled(False)
-            self.ui.comboBox_channel.clear()
+        # Enable Boxes
+        if self.ui.comboBox_review_rep.currentText() == '' or self.ui.comboBox_review_channel.count() < 2:
+            self.ui.comboBox_review_channel.setEnabled(False)
+            self.ui.comboBox_review_channel.clear()
         else:
-            self.ui.label_channel.setEnabled(True)
-            self.ui.comboBox_channel.setEnabled(True)
+            self.ui.comboBox_review_channel.setEnabled(True)
+        if self.ui.comboBox_raster_trace.currentText() == '' or self.ui.comboBox_raster_channel.count() < 2:
+            self.ui.comboBox_raster_channel.setEnabled(False)
+            self.ui.comboBox_raster_channel.clear()
+        else:
+            self.ui.comboBox_raster_channel.setEnabled(True)
+        if self.ui.comboBox_histogram_trace.currentText() == '' or self.ui.comboBox_histogram_channel.count() < 2:
+            self.ui.comboBox_histogram_channel.setEnabled(False)
+            self.ui.comboBox_histogram_channel.clear()
+        else:
+            self.ui.comboBox_histogram_channel.setEnabled(True)
+        if self.ui.comboBox_tc_view_rep.currentText() == '' or self.ui.comboBox_tc_view_channel.count() < 2:
+            self.ui.comboBox_tc_view_channel.setEnabled(False)
+            self.ui.comboBox_tc_view_channel.clear()
+        else:
+            self.ui.comboBox_tc_view_channel.setEnabled(False)
+        if self.ui.comboBox_io_view_rep.currentText() == '' or self.ui.comboBox_io_view_channel.count() < 2:
+            self.ui.comboBox_io_view_channel.setEnabled(False)
+            self.ui.comboBox_io_view_channel.clear()
+        else:
+            self.ui.comboBox_io_view_channel.setEnabled(True)
+        if self.ui.comboBox_sr_view_rep.currentText() == '' or self.ui.comboBox_sr_view_channel.count() < 2:
+            self.ui.comboBox_sr_view_channel.setEnabled(False)
+            self.ui.comboBox_sr_view_channel.clear()
+        else:
+            self.ui.comboBox_sr_view_channel.setEnabled(True)
 
-        if self.ui.comboBox_test_num.count() == 0:
+        if self.ui.comboBox_review_test_num.count() == 0:
             h_file.close()
             self.clear_view()
             return
+
+        target_seg = None
 
         for key in h_file.keys():
             if 'segment' in key:
@@ -407,19 +630,52 @@ class MyForm(QtGui.QMainWindow):
                         target_seg = key
                         target_test = test
 
-        if len(h_file[target_seg][target_test].value.shape) > 3:
-            channels = h_file[target_seg][target_test].value.shape[2]
+        if target_seg is None:
+            return
+
+        # If there are more than three attributes in value (test, trace, rep, channel)
+        temp = h_file[target_seg][target_test].value.shape
+        if len(temp) > 3:
+            channels = temp[2]
         else:
             channels = 1
 
         if channels == 1:
-            self.ui.comboBox_channel.addItem('channel_1')
+            if tab == 'review':
+                self.ui.comboBox_review_channel.addItem('channel_1')
+            elif tab == 'raster':
+                self.ui.comboBox_raster_channel.addItem('channel_1')
+            elif tab == 'histogram':
+                self.ui.comboBox_histogram_channel.addItem('channel_1')
+            elif tab == 'tuning_curve':
+                self.ui.comboBox_tc_view_channel.addItem('channel_1')
+            # elif tab == 'abr':
+            #     self.ui.comboBox_abr_view_channel.addItem('channel_1')
+            elif tab == 'io_test':
+                self.ui.comboBox_io_view_channel.addItem('channel_1')
+            elif tab == 'spike_rates':
+                self.ui.comboBox_sr_view_channel.addItem('channel_1')
         else:
+            temp = []
             for i in range(channels):
-                self.ui.comboBox_channel.addItem('channel_' + str(i+1))
+                temp.append('channel_' + str(i+1))
 
-        if self.ui.comboBox_trace.currentText() != '' and self.ui.comboBox_rep.currentText() != '' and self.ui.comboBox_channel != '':
-            self.generate_view()
+            if tab == 'review':
+                self.ui.comboBox_review_channel.addItems(temp)
+            elif tab == 'raster':
+                self.ui.comboBox_raster_channel.addItems(temp)
+            elif tab == 'histogram':
+                self.ui.comboBox_histogram_channel.addItems(temp)
+            elif tab == 'tuning_curve':
+                self.ui.comboBox_tc_view_channel.addItems(temp)
+            elif tab == 'io_test':
+                self.ui.comboBox_io_view_channel.addItems(temp)
+            elif tab == 'spike_rates':
+                self.ui.comboBox_sr_view_channel.addItems(temp)
+
+        # if tab == 'review' and self.ui.comboBox_review_trace.currentText() != '' and \
+        #                 self.ui.comboBox_review_rep.currentText() != '' and self.ui.comboBox_review_channel != '':
+        #     self.generate_view()
 
         h_file.close()
 
@@ -971,7 +1227,7 @@ class MyForm(QtGui.QMainWindow):
 
     def add_message(self, message):
         self.message_num += 1
-        self.ui.textEdit.append('[' + str(self.message_num) + ']: ' + message + '\n')
+        self.ui.textEdit_log.append('[' + str(self.message_num) + ']: ' + message + '\n')
 
     def clear_view(self):
         self.ui.view.clearTraces()
@@ -983,6 +1239,227 @@ class MyForm(QtGui.QMainWindow):
         self.ui.view.rasterPlot.clear()
         self.ui.view.stimPlot.clear()
         self.ui.view.trace_stash = []
+
+    def clear_test(self):
+        self.ui.comboBox_review_test_num.clear()
+        self.ui.comboBox_raster_test_num.clear()
+        self.ui.comboBox_histogram_test_num.clear()
+        self.ui.comboBox_tc_test_num.clear()
+        self.ui.comboBox_abr_test_num.clear()
+        self.ui.comboBox_io_test_num.clear()
+        self.ui.comboBox_sr_test_num.clear()
+
+    def clear_traces(self):
+        self.ui.comboBox_review_trace.clear()
+        self.ui.comboBox_raster_trace.clear()
+        self.ui.comboBox_histogram_trace.clear()
+        self.ui.comboBox_tc_view_trace.clear()
+        self.ui.comboBox_io_view_trace.clear()
+        self.ui.comboBox_sr_view_trace.clear()
+
+    def clear_reps(self):
+        self.ui.comboBox_review_rep.clear()
+        self.ui.comboBox_tc_view_rep.clear()
+        self.ui.comboBox_io_view_rep.clear()
+        self.ui.comboBox_sr_view_rep.clear()
+
+    def clear_channels(self):
+        self.ui.comboBox_review_channel.clear()
+        self.ui.comboBox_raster_channel.clear()
+        self.ui.comboBox_histogram_channel.clear()
+        self.ui.comboBox_tc_channel.clear()
+        self.ui.comboBox_tc_view_channel.clear()
+        self.ui.comboBox_io_view_channel.clear()
+        self.ui.comboBox_sr_view_channel.clear()
+
+    def disable(self):
+        # Review
+        self.ui.comboBox_review_test_num.setEnabled(False)
+        self.ui.lineEdit_review_comments.setEnabled(False)
+        self.ui.lineEdit_review_comments.setText('')
+        self.ui.comboBox_review_trace.setEnabled(False)
+        self.ui.comboBox_review_rep.setEnabled(False)
+        self.ui.comboBox_review_channel.setEnabled(False)
+
+        # Raster
+        self.ui.comboBox_raster_test_num.setEnabled(False)
+        self.ui.lineEdit_raster_comments.setEnabled(False)
+        self.ui.lineEdit_raster_comments.setText('')
+        self.ui.comboBox_raster_trace.setEnabled(False)
+        self.ui.comboBox_raster_channel.setEnabled(False)
+
+        # Histogram
+        self.ui.comboBox_histogram_test_num.setEnabled(False)
+        self.ui.lineEdit_histogram_comments.setEnabled(False)
+        self.ui.lineEdit_histogram_comments.setText('')
+        self.ui.comboBox_histogram_trace.setEnabled(False)
+        self.ui.comboBox_histogram_channel.setEnabled(False)
+
+        # Tuning Curve
+        self.ui.comboBox_tc_test_num.setEnabled(False)
+        self.ui.comboBox_tc_channel.setEnabled(False)
+        self.ui.lineEdit_tc_comments.setEnabled(False)
+        self.ui.lineEdit_tc_comments.setText('')
+        self.ui.comboBox_tc_view_trace.setEnabled(False)
+        self.ui.comboBox_tc_view_rep.setEnabled(False)
+        self.ui.comboBox_tc_view_channel.setEnabled(False)
+        self.ui.groupBox_tc_plot.setEnabled(False)
+        self.ui.groupBox_tc_units.setEnabled(False)
+        self.ui.groupBox_tc_error.setEnabled(False)
+        # self.ui.radioButton_tc_freq.setEnabled(False)
+        # self.ui.radioButton_tc_contour.setEnabled(False)
+        # self.ui.radioButton_tc_meanspikes.setEnabled(False)
+        # self.ui.radioButton_tc_responserate.setEnabled(False)
+        # self.ui.radioButton_tc_stddeviation.setEnabled(False)
+        # self.ui.radioButton_tc_stderror.setEnabled(False)
+        # self.ui.radioButton_tc_none.setEnabled(False)
+
+        # ABR
+        self.ui.comboBox_abr_test_num.setEnabled(False)
+        self.ui.lineEdit_abr_comments.setEnabled(False)
+        self.ui.comboBox_abr_frequency.setEnabled(False)
+        self.ui.doubleSpinBox_abr_min_sep.setEnabled(False)
+
+        # I/O
+        self.ui.comboBox_io_test_num.setEnabled(False)
+        self.ui.lineEdit_io_comments.setEnabled(False)
+        self.ui.lineEdit_io_comments.setText('')
+        self.ui.comboBox_io_view_trace.setEnabled(False)
+        self.ui.comboBox_io_view_rep.setEnabled(False)
+        self.ui.comboBox_io_view_channel.setEnabled(False)
+        self.ui.groupBox_io_error.setEnabled(False)
+        # self.ui.radioButton_io_stddeviation.setEnabled(False)
+        # self.ui.radioButton_io_stderror.setEnabled(False)
+        # self.ui.radioButton_io_none.setEnabled(False)
+
+        # Spike Rates
+        self.ui.comboBox_sr_test_num.setEnabled(False)
+        self.ui.lineEdit_sr_comments.setEnabled(False)
+        self.ui.lineEdit_sr_comments.setText('')
+        self.ui.comboBox_sr_view_trace.setEnabled(False)
+        self.ui.comboBox_sr_view_rep.setEnabled(False)
+        self.ui.comboBox_sr_view_channel.setEnabled(False)
+
+    def enable(self):
+        # Review
+        self.ui.comboBox_review_test_num.setEnabled(True)
+        self.ui.lineEdit_review_comments.setEnabled(True)
+        self.ui.lineEdit_review_comments.setText('')
+        self.ui.comboBox_review_trace.setEnabled(True)
+        self.ui.comboBox_review_rep.setEnabled(True)
+        self.ui.comboBox_review_channel.setEnabled(True)
+
+        # Raster
+        self.ui.comboBox_raster_test_num.setEnabled(True)
+        self.ui.lineEdit_raster_comments.setEnabled(True)
+        self.ui.lineEdit_raster_comments.setText('')
+        self.ui.comboBox_raster_trace.setEnabled(True)
+        self.ui.comboBox_raster_channel.setEnabled(True)
+
+        # Histogram
+        self.ui.comboBox_histogram_test_num.setEnabled(True)
+        self.ui.lineEdit_histogram_comments.setEnabled(True)
+        self.ui.lineEdit_histogram_comments.setText('')
+        self.ui.comboBox_histogram_trace.setEnabled(True)
+        self.ui.comboBox_histogram_channel.setEnabled(True)
+
+        # Tuning Curve
+        self.ui.comboBox_tc_test_num.setEnabled(True)
+        self.ui.comboBox_tc_channel.setEnabled(True)
+        self.ui.lineEdit_tc_comments.setEnabled(True)
+        self.ui.lineEdit_tc_comments.setText('')
+        self.ui.comboBox_tc_view_trace.setEnabled(True)
+        self.ui.comboBox_tc_view_rep.setEnabled(False)
+        self.ui.comboBox_tc_view_channel.setEnabled(False)
+        self.ui.groupBox_tc_plot.setEnabled(True)
+        self.ui.groupBox_tc_units.setEnabled(True)
+        self.ui.groupBox_tc_error.setEnabled(True)
+        # self.ui.radioButton_tc_freq.setEnabled(True)
+        # self.ui.radioButton_tc_contour.setEnabled(True)
+        # self.ui.radioButton_tc_meanspikes.setEnabled(True)
+        # self.ui.radioButton_tc_responserate.setEnabled(True)
+        # self.ui.radioButton_tc_stddeviation.setEnabled(True)
+        # self.ui.radioButton_tc_stderror.setEnabled(True)
+        # self.ui.radioButton_tc_none.setEnabled(True)
+
+        # ABR
+        self.ui.comboBox_abr_test_num.setEnabled(True)
+        self.ui.lineEdit_abr_comments.setEnabled(True)
+        self.ui.comboBox_abr_frequency.setEnabled(True)
+        self.ui.doubleSpinBox_abr_min_sep.setEnabled(True)
+
+        # I/O
+        self.ui.comboBox_io_test_num.setEnabled(True)
+        self.ui.lineEdit_io_comments.setEnabled(True)
+        self.ui.lineEdit_io_comments.setText('')
+        self.ui.comboBox_io_view_trace.setEnabled(True)
+        self.ui.comboBox_io_view_rep.setEnabled(True)
+        self.ui.comboBox_io_view_channel.setEnabled(True)
+        self.ui.groupBox_io_error.setEnabled(True)
+        # self.ui.radioButton_io_stddeviation.setEnabled(True)
+        # self.ui.radioButton_io_stderror.setEnabled(True)
+        # self.ui.radioButton_io_none.setEnabled(True)
+
+        # Spike Rates
+        self.ui.comboBox_sr_test_num.setEnabled(True)
+        self.ui.lineEdit_sr_comments.setEnabled(True)
+        self.ui.lineEdit_sr_comments.setText('')
+        self.ui.comboBox_sr_view_trace.setEnabled(True)
+        self.ui.comboBox_sr_view_rep.setEnabled(True)
+        self.ui.comboBox_sr_view_channel.setEnabled(True)
+
+    def tabfocus(self):
+        index = self.ui.tabWidget.currentIndex()
+        tab_name = self.ui.tabWidget.currentWidget().objectName()
+
+        # Resize tab
+        for tab in range(0, self.ui.tabWidget.count()):
+            self.ui.tabWidget.widget(tab).setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Ignored)
+        self.ui.tabWidget.widget(index).setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+
+        print '->', tab_name
+
+        if tab_name == 'review':
+            target_test = self.ui.comboBox_review_test_num.currentText()
+            if target_test != self.review_test:
+                self.load_traces()
+                self.review_test = target_test
+
+        elif tab_name == 'raster':
+            target_test = self.ui.comboBox_raster_test_num.currentText()
+            if target_test != self.raster_test:
+                self.load_traces()
+                self.raster_test = target_test
+
+        elif tab_name == 'histogram':
+            target_test = self.ui.comboBox_histogram_test_num.currentText()
+            if target_test != self.histogram_test:
+                self.load_traces()
+                self.histogram_test = target_test
+
+        elif tab_name == 'tuning_curve':
+            target_test = self.ui.comboBox_tc_test_num.currentText()
+            if target_test != self.tc_test:
+                self.load_traces()
+                self.tc_test = target_test
+
+        elif tab_name == 'abr':
+            target_test = self.ui.comboBox_abr_test_num.currentText()
+            if target_test != self.abr_test:
+                self.load_traces()
+                self.abr_test = target_test
+
+        elif tab_name == 'io_test':
+            target_test = self.ui.comboBox_io_test_num.currentText()
+            if target_test != self.io_test:
+                self.load_traces()
+                self.io_test = target_test
+
+        elif tab_name == 'spike_rates':
+            target_test = self.ui.comboBox_sr_test_num.currentText()
+            if target_test != self.sr_test:
+                self.load_traces()
+                self.sr_test = target_test
 
 
 def check_output_folders():

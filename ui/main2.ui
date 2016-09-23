@@ -1789,7 +1789,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>557</width>
-                 <height>140</height>
+                 <height>92</height>
                 </rect>
                </property>
               </widget>
@@ -2224,7 +2224,7 @@
                  <x>0</x>
                  <y>0</y>
                  <width>557</width>
-                 <height>202</height>
+                 <height>154</height>
                 </rect>
                </property>
               </widget>
@@ -2619,6 +2619,12 @@
           <horstretch>0</horstretch>
           <verstretch>1</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>300</width>
+          <height>150</height>
+         </size>
         </property>
         <property name="features">
          <set>QDockWidget::AllDockWidgetFeatures</set>

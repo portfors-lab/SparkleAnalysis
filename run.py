@@ -246,6 +246,8 @@ class MyForm(QtGui.QMainWindow):
                 if len(test_data.shape) == 3:
                     rep_len = test_data.shape[1]
                     for i in range(rep_len):
+                        if not test_data[target_trace, i, :].any():
+                            return
                         if min(test_data[target_trace, i, :]) < ymin:
                             ymin = min(test_data[target_trace, i, :])
                         if max(test_data[target_trace, i, :]) > ymax:
@@ -253,6 +255,8 @@ class MyForm(QtGui.QMainWindow):
                 else:
                     rep_len = test_data.shape[1]
                     for i in range(rep_len):
+                        if not test_data[target_trace, i, target_chan, :].any():
+                            return
                         if min(test_data[target_trace, i, target_chan, :]) < ymin:
                             ymin = min(test_data[target_trace, i, target_chan, :])
                         if max(test_data[target_trace, i, target_chan, :]) > ymax:

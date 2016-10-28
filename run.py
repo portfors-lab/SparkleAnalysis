@@ -424,6 +424,7 @@ class MyForm(QtGui.QMainWindow):
             self.ui.label_channel.setEnabled(False)
             self.ui.comboBox_channel.setEnabled(False)
             self.ui.comboBox_channel.clear()
+            self.ui.comboBox_channel.addItem('channel_1')
         else:
             self.ui.label_channel.setEnabled(True)
             self.ui.comboBox_channel.setEnabled(True)

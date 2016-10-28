@@ -202,6 +202,7 @@ class TuningCurveDialog(QtGui.QMainWindow):
         if self.ui.comboBox_test_num.currentText() == '' or self.ui.comboBox_channel.count() < 2:
             self.ui.comboBox_channel.setEnabled(False)
             self.ui.comboBox_channel.clear()
+            self.ui.comboBox_channel.addItem('channel_1')
         else:
             self.ui.comboBox_channel.setEnabled(True)
 

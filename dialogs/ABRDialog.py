@@ -109,7 +109,11 @@ class ABRDialog(QtGui.QMainWindow):
                     abr[t, 0, 0, s] = average[s]
                 intensity.append(stim_info[t]['components'][0]['intensity'])
                 if t != 0:
-                    frequency.append(stim_info[t]['components'][0]['frequency'])
+                    try:
+                        frequency.append(stim_info[t]['components'][0]['frequency'])
+                    except:
+                        # print stim_info[t]['components'][0]
+                        frequency.append(0)  # TODO: Find actual frequency
         elif len(trace_data.shape) == 3:
             for t in range(traces):
                 for s in range(samples):
@@ -121,7 +125,11 @@ class ABRDialog(QtGui.QMainWindow):
                     abr[t, 0, 0, s] = average[s]
                 intensity.append(stim_info[t]['components'][0]['intensity'])
                 if t != 0:
-                    frequency.append(stim_info[t]['components'][0]['frequency'])
+                    try:
+                        frequency.append(stim_info[t]['components'][0]['frequency'])
+                    except:
+                        # print stim_info[t]['components'][0]
+                        frequency.append(0)  # TODO: Find actual frequency
         else:
             self.add_message('Cannot handle trace_data of shape: ' + str(trace_data.shape))
             return
@@ -163,8 +171,11 @@ class ABRDialog(QtGui.QMainWindow):
                     target_seg = segment
                     target_test = test
 
-        comment = h_file[target_seg].attrs['comment']
-        self.ui.lineEdit_comments.setText(comment)
+        try:
+            comment = h_file[target_seg].attrs['comment']
+            self.ui.lineEdit_comments.setText(comment)
+        except:
+            print 'Failed to load comment'
 
         # Set Frequency Field disabled
         self.ui.label_frequency.setEnabled(False)
@@ -228,7 +239,11 @@ class ABRDialog(QtGui.QMainWindow):
                     temp[t, 0, 0, s] = average[s]
                 intensity.append(stim_info[t]['components'][0]['intensity'])
                 if t != 0:
-                    frequency.append(stim_info[t]['components'][0]['frequency'])
+                    try:
+                        frequency.append(stim_info[t]['components'][0]['frequency'])
+                    except:
+                        # print stim_info[t]['components'][0]
+                        frequency.append(0)  # TODO: Find actual frequency
                 else:
                     frequency.append(0)
         elif len(trace_data.shape) == 3:
@@ -242,7 +257,11 @@ class ABRDialog(QtGui.QMainWindow):
                     temp[t, 0, 0, s] = average[s]
                 intensity.append(stim_info[t]['components'][0]['intensity'])
                 if t != 0:
-                    frequency.append(stim_info[t]['components'][0]['frequency'])
+                    try:
+                        frequency.append(stim_info[t]['components'][0]['frequency'])
+                    except:
+                        # print stim_info[t]['components'][0]
+                        frequency.append(0)  # TODO: Find actual frequency
                 else:
                     frequency.append(0)
         else:

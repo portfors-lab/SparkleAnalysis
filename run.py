@@ -342,8 +342,11 @@ class MyForm(QtGui.QMainWindow):
         self.ui.label_trace.setEnabled(True)
         self.ui.comboBox_trace.setEnabled(True)
 
-        comment = h_file[target_seg].attrs['comment']
-        self.ui.lineEdit_comments.setText(comment)
+        try:
+            comment = h_file[target_seg].attrs['comment']
+            self.ui.lineEdit_comments.setText(comment)
+        except:
+            print 'Failed to load comment'
 
         h_file.close()
 
